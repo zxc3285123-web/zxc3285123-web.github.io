@@ -181,11 +181,11 @@ sitemap.xml         사이트맵
 ads.txt             애드센스 게시자 확인
 .nojekyll           Jekyll 비활성화
 assets/style.css    공통 스타일
-guide/              규정 가이드 문서
+guide/              규정 가이드 문서 (20편)
 _build.py           빌드 스크립트
 _items.py           품목 데이터베이스 (297개, 별칭 2,095개)
 _airlines.py        항공사 규정 (41곳)
-_posts*.py          가이드 문서 원고
+_posts1~8.py        가이드 문서 원고 (20편)
 _tool/              판별기 화면·스크립트 원본
 ```
 

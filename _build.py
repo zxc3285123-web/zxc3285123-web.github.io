@@ -120,11 +120,24 @@ AD = """<div class="adslot">
 # ── 글 모으기 ────────────────────────────────
 from _items import ITEMS, CATS
 from _airlines import AIRLINES
-import _posts1, _posts2, _posts3, _posts4
+import _posts1, _posts2, _posts3, _posts4, _posts5, _posts6, _posts7, _posts8
 ALL_POSTS = {}
-for mod in (_posts1, _posts2, _posts3, _posts4):
+for mod in (_posts1, _posts2, _posts3, _posts4, _posts5, _posts6, _posts7, _posts8):
     ALL_POSTS.update(mod.POSTS)
-ORDER = ["battery", "liquid", "banned", "checked", "airlines", "packing"]
+ORDER = [
+    # 기본 규정
+    "battery", "liquid", "banned", "checked", "domestic",
+    # 항공사와 요금
+    "airlines", "excess", "carryon",
+    # 짐 싸기
+    "packing", "season", "electronics", "medicine",
+    # 공항과 이동
+    "security", "transit", "lost",
+    # 동반 여행과 특수 수하물
+    "pet", "baby", "sports",
+    # 세관과 검역
+    "customs", "quarantine",
+]
 POSTS = [ALL_POSTS[k] for k in ORDER]
 
 def post_page(p):
