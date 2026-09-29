@@ -18,6 +18,30 @@
 
   function oxOf(item, r){ return (r.ox || item.ox).split(""); }
 
+  /* 검역·세관 (출국 = 목적지 규정 / 입국 = 한국 반입 규정) */
+  const IOV = {
+    ok:      { label:"반입 가능",   c:"var(--v-both)",    bg:"var(--v-both-bg)",    line:"var(--v-both-line)" },
+    declare: { label:"신고 필요",   c:"var(--v-checked)", bg:"var(--v-checked-bg)", line:"var(--v-checked-line)" },
+    ban:     { label:"반입 금지",   c:"var(--v-ban)",     bg:"var(--v-ban-bg)",     line:"var(--v-ban-line)" },
+    warn:    { label:"목적지 확인", c:"var(--v-cond)",    bg:"var(--v-cond-bg)",    line:"var(--v-cond-line)" }
+  };
+
+  /* 현재 모드에서 보여줄 검역 안내. 없으면 null */
+  function ioOf(item){
+    const io = item.io;
+    if (!io) return null;
+    if (state.route === "int" && io.out)
+      return { key:"warn", title:"목적지 검역 · 세관", text:io.out, badge:null };
+    if (state.route === "arr" && io.inv)
+      return { key:io.inv, title:"한국 반입", text:io.ind, badge:IOV[io.inv].label };
+    return null;
+  }
+
+  function ioStyle(key){
+    const m = IOV[key];
+    return '--ioc:' + m.c + ';--iob:' + m.bg + ';--iol:' + m.line;
+  }
+
   /* 초성 검색: "ㅂㅈㅂㅌㄹ" → 보조배터리 */
   const CHO = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
   function toCho(str){
@@ -67,7 +91,7 @@
     return 99;
   }
 
-  const state = { airline:"ke", route:"int", q:"", cat:null, verdict:null };
+  const state = { airline:"ke", route:"int", q:"", cat:null, verdict:null, ioOnly:false };
 
   const $ = (s) => document.querySelector(s);
   const grid = $("#grid"), empty = $("#empty");
@@ -183,6 +207,7 @@
     const pool = ITEMS.filter(it => {
       if (state.cat && it.c !== state.cat) return false;
       if (state.verdict && resolve(it).v !== state.verdict) return false;
+      if (state.ioOnly && !ioOf(it)) return false;
       return true;
     });
 
@@ -202,6 +227,7 @@
       const r = resolve(it);
       const meta = V[r.v];
       const ox = oxOf(it, r);
+      const io = ioOf(it);
       const card = document.createElement("article");
       card.className = "item";
       card.style.setProperty("--c", meta.c);
@@ -220,14 +246,17 @@
           '<span class="oxpill" style="--mc:' + MARK_COLOR[ox[0]] + '">기내 <b class="m">' + ox[0] + '</b></span>' +
           '<span class="oxpill" style="--mc:' + MARK_COLOR[ox[1]] + '">위탁 <b class="m">' + ox[1] + '</b></span>' +
         '</div>' +
-        '<p class="desc">' + r.d + '</p>';
+        '<p class="desc">' + r.d + '</p>' +
+        (io ? '<div class="io" style="' + ioStyle(io.key) + '"><b class="t">' + io.title + '</b>' +
+              (io.badge ? '<span class="verdict-io">' + io.badge + '</span>' : '') + io.text + '</div>' : '');
       if (r.calc) card.appendChild(makeCalc(it, r.v));
       grid.appendChild(card);
     });
 
     syncReset();
     $("#count").textContent = list.length;
-    $("#count-label").textContent = "개 품목" + (state.route === "dom" ? " · 국내선 기준" : " · 국제선 기준");
+    const ROUTE_LABEL = { dom:" · 국내선 기준", int:" · 국제선 출국 기준", arr:" · 국제선 입국 기준" };
+    $("#count-label").textContent = "개 품목" + (ROUTE_LABEL[state.route] || "");
     empty.hidden = list.length !== 0;
   }
 
@@ -236,6 +265,7 @@
     if (!list.length){ hero.hidden = true; hero.innerHTML = ""; return; }
     const it = list[0], r = resolve(it), meta = V[r.v], ox = oxOf(it, r);
     const alias = aliasHit(it, squash(state.q));
+    const hio = ioOf(it);
     hero.hidden = false;
     hero.style.setProperty("--c", meta.c);
     hero.style.setProperty("--cbg", meta.bg);
@@ -243,13 +273,16 @@
     hero.innerHTML =
       '<span class="hero-emo" aria-hidden="true">' + it.e + '</span>' +
       '<div class="hero-text">' +
-        '<p class="hero-kicker">' + (state.route === "dom" ? "국내선" : "국제선") + ' · ' + it.c + '</p>' +
+        '<p class="hero-kicker">' + ({dom:"국내선", int:"국제선 출국", arr:"국제선 입국"}[state.route] || "") + ' · ' + it.c + '</p>' +
         '<h2 class="hero-name">' + it.n + '</h2>' +
         '<p class="hero-verdict">' + meta.label + '</p>' +
         (alias ? '<p class="hero-alias">‘' + esc(state.q.trim()) + '’ → <b>' + esc(it.n) + '</b>' + josaRo(it.n) + ' 찾았어요</p>' : '') +
         '<p class="hero-desc">' + r.d + '</p>' +
         (list.length > 1 ? '<p class="hero-more">비슷한 검색 결과 ' + (list.length - 1) + '개가 아래에 더 있어요.</p>' : '') +
       '</div>' +
+      (hio ? '<div class="hero-io" style="' + ioStyle(hio.key) + '"><b class="t">' + hio.title + '</b>' +
+             (hio.badge ? '<span class="verdict-io" style="color:var(--ioc);font-weight:700;margin-right:5px">' + hio.badge + '</span>' : '') +
+             hio.text + '</div>' : '') +
       '<div class="hero-ox">' +
         '<div class="oxtile" style="--mc:' + MARK_COLOR[ox[0]] + '"><span class="t">기내</span><span class="m">' + ox[0] + '</span></div>' +
         '<div class="oxtile" style="--mc:' + MARK_COLOR[ox[1]] + '"><span class="t">위탁</span><span class="m">' + ox[1] + '</span></div>' +
@@ -371,14 +404,29 @@
   });
 
   const resetBtn = $("#reset");
+  const ioBtn = $("#io-only");
   function syncReset(){
-    resetBtn.dataset.active = String(Boolean(state.q || state.cat || state.verdict));
+    resetBtn.dataset.active = String(Boolean(state.q || state.cat || state.verdict || state.ioOnly));
   }
+
+  /* 검역·세관 주의 품목만 보기. 국내선에는 해당 사항이 없다 */
+  ioBtn.addEventListener("click", () => {
+    state.ioOnly = !state.ioOnly;
+    ioBtn.setAttribute("aria-pressed", String(state.ioOnly));
+    if (state.ioOnly && state.route === "dom"){
+      state.route = "arr";
+      document.querySelectorAll(".seg button").forEach(x =>
+        x.setAttribute("aria-pressed", String(x.dataset.route === "arr")));
+      renderRule();
+    }
+    render();
+  });
 
   /* 이벤트 */
   resetBtn.addEventListener("click", () => {
-    state.q = ""; state.cat = null; state.verdict = null;
+    state.q = ""; state.cat = null; state.verdict = null; state.ioOnly = false;
     $("#q").value = "";
+    ioBtn.setAttribute("aria-pressed","false");
     vWrap.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed","false"));
     cWrap.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed","false"));
     closeSuggest();
@@ -391,6 +439,9 @@
   document.querySelectorAll(".seg button").forEach(b => {
     b.addEventListener("click", () => {
       state.route = b.dataset.route;
+      if (state.route === "dom" && state.ioOnly){
+        state.ioOnly = false; ioBtn.setAttribute("aria-pressed","false");
+      }
       document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
       if (!sugEl.hidden) renderSuggest();
       render();
@@ -419,7 +470,7 @@
     const a0 = (params.get("airline") || "").trim();
     const r0 = (params.get("route") || "").trim();
     if (a0 && AIRLINES.some(x => x.id === a0)){ state.airline = a0; sel.value = a0; renderRule(); }
-    if (r0 === "dom" || r0 === "int"){
+    if (r0 === "dom" || r0 === "int" || r0 === "arr"){
       state.route = r0;
       document.querySelectorAll(".seg button").forEach(x =>
         x.setAttribute("aria-pressed", String(x.dataset.route === r0)));

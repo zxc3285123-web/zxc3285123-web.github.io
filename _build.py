@@ -264,11 +264,11 @@ page(path="index.html", cur="index.html", depth=0,
      desc=SITE_DESC,
      head_extra=f'<script type="application/ld+json">{faq_schema}</script>\n',
      body=f"""{hero("Cabin · Checked · Prohibited", "이 짐, 들고 탈까 부칠까",
-       f"물건 이름을 치면 기내·위탁·반입금지를 신호등처럼 알려드립니다. 항공사 {len(AIRLINES)}곳 규정과 품목 {len(ITEMS)}개를 담았습니다.")}
+       f"물건 이름을 치면 기내·위탁·반입금지를 신호등처럼 알려드립니다. 국제선은 출국·입국을 나눠 검역과 세관까지 확인할 수 있어요. 항공사 {len(AIRLINES)}곳, 품목 {len(ITEMS)}개.")}
 <main class="wrap">
 
   <div class="toolcta">
-    <p><strong>수하물 판별기</strong><br>항공사와 노선을 고르고 물건 이름을 검색하면 기내와 위탁을 ○ △ ✕로 보여 줍니다. 보조배터리 용량과 액체 용기 크기는 숫자를 넣으면 바로 계산돼요.</p>
+    <p><strong>수하물 판별기</strong><br>물건 이름을 검색하면 기내와 위탁을 ○ △ ✕로 보여 줍니다. <strong>국내선 · 국제선 출국 · 국제선 입국</strong>을 고르면 액체 규정과 검역·세관 기준이 함께 바뀌어요.</p>
     <a class="btn" href="tool.html">판별기 열기</a>
   </div>
 
@@ -328,6 +328,7 @@ page(path="about.html", cur="about.html", depth=0,
     <li><strong>중동·유럽 9곳</strong> — 에미레이트, 카타르항공, 에티하드, 터키항공, 루프트한자, 에어프랑스, KLM, LOT 폴란드, 핀에어</li>
     <li><strong>미주·대양주 5곳</strong> — 델타, 유나이티드, 아메리칸, 에어캐나다, 콴타스</li>
     <li>국제민간항공기구(ICAO)의 위험물 운송 기준</li>
+    <li>관세청의 여행자 휴대품 면세 기준, 농림축산검역본부의 동식물 검역 기준</li>
   </ul>
 
   <h2>업데이트 원칙</h2>
@@ -500,6 +501,13 @@ for it in ITEMS:
     if it.get("dom"):
         dm = it["dom"]
         parts.append('dom:{v:%s, ox:%s, d:%s}' % (_js(dm["v"]), _js(dm["ox"]), _js(dm["d"])))
+    if it.get("io"):
+        _io = it["io"]
+        _iop = []
+        if _io.get("out"): _iop.append('out:' + _js(_io["out"]))
+        if _io.get("inv"): _iop.append('inv:' + _js(_io["inv"]))
+        if _io.get("ind"): _iop.append('ind:' + _js(_io["ind"]))
+        parts.append('io:{' + ", ".join(_iop) + '}')
     _rows.append("    {" + ", ".join(parts) + "}")
 
 ITEMS_JS = ("  const ITEMS = [\n" + ",\n".join(_rows) + "\n  ];\n\n"
@@ -550,14 +558,46 @@ def _static_items():
     out.append('</article></section>')
     return "\n".join(out)
 
-STATIC_ITEMS = _static_items()
+def _static_io():
+    rows = [it for it in ITEMS if it.get("io")]
+    IOL = {"ok":("반입 가능","var(--v-both)"), "declare":("신고 필요","var(--v-checked)"),
+           "ban":("반입 금지","var(--v-ban)")}
+    out = ['<section class="wrap" id="quarantine" style="margin-top:44px">',
+           '<article class="post" style="max-width:none">',
+           f'<h2>검역 · 세관 주의 품목 {len(rows)}개</h2>',
+           '<p>보안검색은 통과해도 <strong>도착한 나라에서 막히는</strong> 물건들입니다. '
+           '왼쪽은 한국에서 나갈 때 목적지에서 문제될 내용이고, 오른쪽은 해외에서 한국으로 들어올 때의 판정이에요. '
+           '판별기 위쪽에서 <strong>국제선 출국 / 국제선 입국</strong>을 고르면 같은 내용이 품목 카드에 함께 표시됩니다.</p>',
+           '<div class="tablewrap"><table>',
+           '<thead><tr><th style="min-width:130px">품목</th><th style="min-width:200px">🛫 출국 — 목적지 확인</th>'
+           '<th style="width:88px">🛃 입국</th><th style="min-width:200px">한국 반입 기준</th></tr></thead><tbody>']
+    for c in CATS:
+        sub = [it for it in rows if it["c"] == c]
+        if not sub: continue
+        out.append(f'<tr><th colspan="4" style="background:var(--accent-soft);color:var(--accent-deep)">{c}</th></tr>')
+        for it in sub:
+            io = it["io"]
+            lab, col = IOL.get(io.get("inv", ""), ("—", "var(--muted)"))
+            out.append(
+                f'<tr><td>{it["e"]} {_html.escape(it["n"])}</td>'
+                f'<td style="font-size:12.8px;color:var(--muted)">{io.get("out", "—")}</td>'
+                f'<td style="font-size:12.5px;font-weight:700;color:{col}">{lab}</td>'
+                f'<td style="font-size:12.8px;color:var(--muted)">{io.get("ind", "—")}</td></tr>')
+    out.append('</tbody></table></div>')
+    out.append('<p style="font-size:13px;color:var(--muted)">축산물을 신고하지 않고 들여오면 최대 1천만 원, '
+               '반려동물 사료는 100만 원의 과태료가 부과됩니다. 외화는 미화 1만 달러를 넘으면 신고 대상이에요. '
+               '애매하면 신고하는 쪽이 항상 유리합니다 — 신고는 무료이고, 반입 불가 품목이면 그 자리에서 폐기하고 끝납니다.</p>')
+    out.append('</article></section>')
+    return "\n".join(out)
+
+STATIC_ITEMS = _static_items() + "\n" + _static_io()
 
 page(path="tool.html", cur="tool.html", depth=0,
      title=f"수하물 판별기 — 기내? 위탁? | {SITE_NAME}",
      desc=f"항공사와 노선을 고르고 물건 이름을 검색하면 기내·위탁·반입금지를 바로 알려줍니다. 항공사 {len(AIRLINES)}곳, 품목 {len(ITEMS)}개.",
      head_extra=TOOL_STYLE + "\n<style>.controls{top:52px; z-index:25}</style>\n",
      body=f"""{hero("Cabin · Checked · Prohibited", "이 짐, 들고 탈까 부칠까",
-       f"항공사와 노선을 고르고 물건 이름을 치면 기내·위탁·반입금지를 신호등처럼 알려드려요. 항공사 {len(AIRLINES)}곳, 품목 {len(ITEMS)}개를 담았고 초성으로도 찾을 수 있어요.")}
+       f"물건 이름을 치면 기내·위탁·반입금지를 신호등처럼 알려드려요. 국제선은 출국·입국을 나눠 <strong>검역과 세관</strong>까지 확인할 수 있습니다. 항공사 {len(AIRLINES)}곳, 품목 {len(ITEMS)}개.")}
 
 {TOOL_BODY}
 

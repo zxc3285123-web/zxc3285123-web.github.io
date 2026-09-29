@@ -5,10 +5,11 @@
       <select id="airline"></select>
     </div>
     <div class="field">
-      <label for="route-dom">노선</label>
-      <div class="seg" role="group" aria-label="노선 선택">
+      <label for="route-dom">노선 · 방향</label>
+      <div class="seg seg3" role="group" aria-label="노선과 방향 선택">
         <button type="button" id="route-dom" data-route="dom" aria-pressed="false">국내선</button>
-        <button type="button" id="route-int" data-route="int" aria-pressed="true">국제선</button>
+        <button type="button" id="route-int" data-route="int" aria-pressed="true">국제선 출국</button>
+        <button type="button" id="route-arr" data-route="arr" aria-pressed="false">국제선 입국</button>
       </div>
     </div>
     <form class="field ctrl-search" id="searchform" role="search" autocomplete="off">
@@ -50,6 +51,9 @@
   <div class="filters">
     <div class="chiprow" id="verdict-filters" role="group" aria-label="판정으로 거르기"></div>
     <div class="chiprow" id="cat-filters" role="group" aria-label="분류로 거르기"></div>
+    <div class="chiprow" id="io-filters" role="group" aria-label="검역으로 거르기">
+      <button type="button" class="chip io" id="io-only" aria-pressed="false">🛃 검역 · 세관 주의 품목만</button>
+    </div>
   </div>
 
   <section class="hero" id="hero" hidden></section>
