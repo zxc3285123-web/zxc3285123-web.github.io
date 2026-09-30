@@ -1,16 +1,20 @@
 <div class="controls">
   <div class="wrap ctrl-grid">
-    <div class="field">
+    <div class="field ctrl-airline">
       <label for="airline">항공사</label>
       <select id="airline"></select>
     </div>
-    <div class="field">
+    <div class="field ctrl-route">
       <label for="route-dom">노선 · 방향</label>
       <div class="seg seg3" role="group" aria-label="노선과 방향 선택">
         <button type="button" id="route-dom" data-route="dom" aria-pressed="false">국내선</button>
         <button type="button" id="route-int" data-route="int" aria-pressed="true">국제선 출국</button>
         <button type="button" id="route-arr" data-route="arr" aria-pressed="false">국제선 입국</button>
       </div>
+    </div>
+    <div class="field ctrl-dest" id="dest-field">
+      <label for="dest">도착 국가</label>
+      <select id="dest"></select>
     </div>
     <form class="field ctrl-search" id="searchform" role="search" autocomplete="off">
       <label for="q">물건 검색 · 엔터로 확인</label>
@@ -47,6 +51,8 @@
       <a id="rule-link" href="#" target="_blank" rel="noopener">공식 규정 보기 →</a>
     </div>
   </section>
+
+  <div class="destnote" id="dest-note" hidden></div>
 
   <div class="filters">
     <div class="chiprow" id="verdict-filters" role="group" aria-label="판정으로 거르기"></div>

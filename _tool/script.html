@@ -14,6 +14,8 @@
 
   /*__ITEMS__*/
 
+  /*__DEST__*/
+
   const MARK_COLOR = { "○":"var(--v-both)", "△":"var(--v-cond)", "✕":"var(--v-ban)" };
 
   function oxOf(item, r){ return (r.ox || item.ox).split(""); }
@@ -23,15 +25,31 @@
     ok:      { label:"반입 가능",   c:"var(--v-both)",    bg:"var(--v-both-bg)",    line:"var(--v-both-line)" },
     declare: { label:"신고 필요",   c:"var(--v-checked)", bg:"var(--v-checked-bg)", line:"var(--v-checked-line)" },
     ban:     { label:"반입 금지",   c:"var(--v-ban)",     bg:"var(--v-ban-bg)",     line:"var(--v-ban-line)" },
-    warn:    { label:"목적지 확인", c:"var(--v-cond)",    bg:"var(--v-cond-bg)",    line:"var(--v-cond-line)" }
+    warn:    { label:"확인 필요",   c:"var(--v-cond)",    bg:"var(--v-cond-bg)",    line:"var(--v-cond-line)" }
   };
+
+  const CBY = {};
+  COUNTRIES.forEach(c => { CBY[c.id] = c; });
+
+  /* 도착 국가를 골랐을 때 그 나라 규정. 없으면 null */
+  function destOf(item){
+    if (state.route !== "int" || !state.dest || !item.g) return null;
+    const tbl = DEST[state.dest];
+    const r = tbl && tbl[item.g];
+    if (!r) return null;
+    const c = CBY[state.dest];
+    return { key:r[0], title:c.flag + " " + c.name + " 반입 기준", text:r[1], badge:IOV[r[0]].label };
+  }
 
   /* 현재 모드에서 보여줄 검역 안내. 없으면 null */
   function ioOf(item){
+    const d = destOf(item);
+    if (d) return d;
     const io = item.io;
     if (!io) return null;
     if (state.route === "int" && io.out)
-      return { key:"warn", title:"목적지 검역 · 세관", text:io.out, badge:null };
+      return { key:"warn", title:state.dest ? "일반 검역 · 세관 주의" : "목적지 검역 · 세관",
+               text:io.out, badge:null };
     if (state.route === "arr" && io.inv)
       return { key:io.inv, title:"한국 반입", text:io.ind, badge:IOV[io.inv].label };
     return null;
@@ -91,7 +109,7 @@
     return 99;
   }
 
-  const state = { airline:"ke", route:"int", q:"", cat:null, verdict:null, ioOnly:false };
+  const state = { airline:"ke", route:"int", dest:"", q:"", cat:null, verdict:null, ioOnly:false };
 
   const $ = (s) => document.querySelector(s);
   const grid = $("#grid"), empty = $("#empty");
@@ -109,6 +127,37 @@
     sel.lastElementChild.appendChild(o);
   });
   sel.value = state.airline;
+
+  /* 도착 국가 셀렉트 */
+  const dsel = $("#dest"), dfield = $("#dest-field"), dnote = $("#dest-note");
+  {
+    const o0 = document.createElement("option");
+    o0.value = ""; o0.textContent = "나라 선택 안 함";
+    dsel.appendChild(o0);
+    REGIONS.forEach(rg => {
+      const list = COUNTRIES.filter(c => c.region === rg);
+      if (!list.length) return;
+      const g = document.createElement("optgroup");
+      g.label = rg;
+      list.forEach(c => {
+        const o = document.createElement("option");
+        o.value = c.id; o.textContent = c.flag + " " + c.name;
+        g.appendChild(o);
+      });
+      dsel.appendChild(g);
+    });
+  }
+
+  function renderDest(){
+    dfield.hidden = state.route !== "int";
+    const c = state.route === "int" ? CBY[state.dest] : null;
+    if (!c){ dnote.hidden = true; dnote.innerHTML = ""; return; }
+    dnote.hidden = false;
+    dnote.innerHTML =
+      '<span class="fl" aria-hidden="true">' + c.flag + '</span>' +
+      '<span class="tx"><span class="nm">' + c.name + ' 입국 기준</span>' +
+      '<span class="hd">' + c.head + ' 규정은 자주 바뀌니 출발 전 해당 국가 세관·검역 안내를 한 번 더 확인해 주세요.</span></span>';
+  }
 
   function renderRule(){
     const a = AIRLINES.find(x => x.id === state.airline) || AIRLINES[0];
@@ -255,9 +304,15 @@
 
     syncReset();
     $("#count").textContent = list.length;
-    const ROUTE_LABEL = { dom:" · 국내선 기준", int:" · 국제선 출국 기준", arr:" · 국제선 입국 기준" };
-    $("#count-label").textContent = "개 품목" + (ROUTE_LABEL[state.route] || "");
+    $("#count-label").textContent = "개 품목 · " + routeLabel() + " 기준";
     empty.hidden = list.length !== 0;
+  }
+
+  function routeLabel(){
+    if (state.route === "dom") return "국내선";
+    if (state.route === "arr") return "국제선 입국";
+    const c = CBY[state.dest];
+    return c ? "국제선 출국 · " + c.name : "국제선 출국";
   }
 
   const hero = $("#hero");
@@ -273,7 +328,7 @@
     hero.innerHTML =
       '<span class="hero-emo" aria-hidden="true">' + it.e + '</span>' +
       '<div class="hero-text">' +
-        '<p class="hero-kicker">' + ({dom:"국내선", int:"국제선 출국", arr:"국제선 입국"}[state.route] || "") + ' · ' + it.c + '</p>' +
+        '<p class="hero-kicker">' + routeLabel() + ' · ' + it.c + '</p>' +
         '<h2 class="hero-name">' + it.n + '</h2>' +
         '<p class="hero-verdict">' + meta.label + '</p>' +
         (alias ? '<p class="hero-alias">‘' + esc(state.q.trim()) + '’ → <b>' + esc(it.n) + '</b>' + josaRo(it.n) + ' 찾았어요</p>' : '') +
@@ -406,7 +461,7 @@
   const resetBtn = $("#reset");
   const ioBtn = $("#io-only");
   function syncReset(){
-    resetBtn.dataset.active = String(Boolean(state.q || state.cat || state.verdict || state.ioOnly));
+    resetBtn.dataset.active = String(Boolean(state.q || state.cat || state.verdict || state.ioOnly || state.dest));
   }
 
   /* 검역·세관 주의 품목만 보기. 국내선에는 해당 사항이 없다 */
@@ -417,15 +472,15 @@
       state.route = "arr";
       document.querySelectorAll(".seg button").forEach(x =>
         x.setAttribute("aria-pressed", String(x.dataset.route === "arr")));
-      renderRule();
+      renderRule(); renderDest();
     }
     render();
   });
 
   /* 이벤트 */
   resetBtn.addEventListener("click", () => {
-    state.q = ""; state.cat = null; state.verdict = null; state.ioOnly = false;
-    $("#q").value = "";
+    state.q = ""; state.cat = null; state.verdict = null; state.ioOnly = false; state.dest = "";
+    $("#q").value = ""; dsel.value = ""; renderDest();
     ioBtn.setAttribute("aria-pressed","false");
     vWrap.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed","false"));
     cWrap.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed","false"));
@@ -434,6 +489,7 @@
     qEl.focus();
   });
   sel.addEventListener("change", e => { state.airline = e.target.value; renderRule(); });
+  dsel.addEventListener("change", e => { state.dest = e.target.value; renderDest(); render(); });
   qEl.addEventListener("input", e => { state.q = e.target.value; sugIdx = -1; renderSuggest(); render(); });
   qEl.addEventListener("focus", () => { if (state.q.trim()) renderSuggest(); });
   document.querySelectorAll(".seg button").forEach(b => {
@@ -443,6 +499,7 @@
         state.ioOnly = false; ioBtn.setAttribute("aria-pressed","false");
       }
       document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+      renderDest();
       if (!sugEl.hidden) renderSuggest();
       render();
     });
@@ -461,6 +518,7 @@
   });
 
   renderRule();
+  renderDest();
   render();
 
   /* 홈에서 ?q=보조배터리 형태로 들어오면 바로 결과를 띄운다 */
@@ -469,12 +527,22 @@
     const q0 = (params.get("q") || "").trim();
     const a0 = (params.get("airline") || "").trim();
     const r0 = (params.get("route") || "").trim();
+    const d0 = (params.get("dest") || "").trim();
     if (a0 && AIRLINES.some(x => x.id === a0)){ state.airline = a0; sel.value = a0; renderRule(); }
     if (r0 === "dom" || r0 === "int" || r0 === "arr"){
       state.route = r0;
       document.querySelectorAll(".seg button").forEach(x =>
         x.setAttribute("aria-pressed", String(x.dataset.route === r0)));
     }
+    if (d0 && CBY[d0]){
+      state.dest = d0; dsel.value = d0;
+      if (state.route !== "int"){
+        state.route = "int";
+        document.querySelectorAll(".seg button").forEach(x =>
+          x.setAttribute("aria-pressed", String(x.dataset.route === "int")));
+      }
+    }
+    renderDest();
     if (q0){
       state.q = q0; qEl.value = q0;
       render();
@@ -486,7 +554,7 @@
           h.classList.add("pop");
         });
       }
-    } else if (r0){ render(); }
+    } else if (r0 || d0){ render(); }
   } catch (_) {}
 })();
 </script>

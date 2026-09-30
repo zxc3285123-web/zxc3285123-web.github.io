@@ -33,8 +33,8 @@ CLOUDS = ('<svg viewBox="0 0 1000 180" preserveAspectRatio="xMidYMid slice" aria
  'stroke-width="2" stroke-dasharray="5 8" stroke-linecap="round" opacity=".45"/>'
  '<path d="M418 104 l16 4 l-16 4 l4 -4 z" fill="var(--accent)" opacity=".6"/></svg>')
 
-NAV = [("index.html","홈"), ("tool.html","수하물 판별기"), ("guide/index.html","규정 가이드"),
-       ("about.html","소개"), ("contact.html","문의")]
+NAV = [("index.html","홈"), ("tool.html","수하물 판별기"), ("country.html","나라별 반입"),
+       ("guide/index.html","규정 가이드"), ("about.html","소개"), ("contact.html","문의")]
 
 def nav_html(cur, depth):
     up = "../" * depth
@@ -121,6 +121,8 @@ AD = """<div class="adslot">
 from _items import ITEMS, CATS
 from _airlines import AIRLINES
 import _posts1, _posts2, _posts3, _posts4, _posts5, _posts6, _posts7, _posts8
+import _dest
+DCOUNTRIES, DREGIONS, DGROUPS, DRULES = _dest.COUNTRIES, _dest.REGIONS, _dest.GROUPS, _dest.RULES
 ALL_POSTS = {}
 for mod in (_posts1, _posts2, _posts3, _posts4, _posts5, _posts6, _posts7, _posts8):
     ALL_POSTS.update(mod.POSTS)
@@ -264,12 +266,17 @@ page(path="index.html", cur="index.html", depth=0,
      desc=SITE_DESC,
      head_extra=f'<script type="application/ld+json">{faq_schema}</script>\n',
      body=f"""{hero("Cabin · Checked · Prohibited", "이 짐, 들고 탈까 부칠까",
-       f"물건 이름을 치면 기내·위탁·반입금지를 신호등처럼 알려드립니다. 국제선은 출국·입국을 나눠 검역과 세관까지 확인할 수 있어요. 항공사 {len(AIRLINES)}곳, 품목 {len(ITEMS)}개.")}
+       f"물건 이름을 치면 기내·위탁·반입금지를 신호등처럼 알려드립니다. 국제선은 출국·입국을 나눠 도착 국가별 검역과 세관까지 확인할 수 있어요. 항공사 {len(AIRLINES)}곳, 품목 {len(ITEMS)}개, 나라 {len(DCOUNTRIES)}개국.")}
 <main class="wrap">
 
   <div class="toolcta">
-    <p><strong>수하물 판별기</strong><br>물건 이름을 검색하면 기내와 위탁을 ○ △ ✕로 보여 줍니다. <strong>국내선 · 국제선 출국 · 국제선 입국</strong>을 고르면 액체 규정과 검역·세관 기준이 함께 바뀌어요.</p>
+    <p><strong>수하물 판별기</strong><br>물건 이름을 검색하면 기내와 위탁을 ○ △ ✕로 보여 줍니다. <strong>국내선 · 국제선 출국 · 국제선 입국</strong>을 고르면 액체 규정과 검역·세관 기준이 함께 바뀌고, 출국은 <strong>도착 국가</strong>까지 고를 수 있어요.</p>
     <a class="btn" href="tool.html">판별기 열기</a>
+  </div>
+
+  <div class="toolcta">
+    <p><strong>나라별 반입 규정</strong><br>같은 김치라도 도착하는 나라에 따라 결과가 달라집니다. 일본·대만·미국·호주 등 14개국의 <strong>육류·유제품·과일·전자담배·의약품</strong> 기준과 면세 한도를 품목별로 모았어요.</p>
+    <a class="btn" href="country.html">나라별 반입 보기</a>
   </div>
 
   <article class="post" style="max-width:none">
@@ -501,6 +508,8 @@ for it in ITEMS:
     if it.get("dom"):
         dm = it["dom"]
         parts.append('dom:{v:%s, ox:%s, d:%s}' % (_js(dm["v"]), _js(dm["ox"]), _js(dm["d"])))
+    _g = DGROUPS.get(it["n"])
+    if _g: parts.append('g:' + _js(_g))
     if it.get("io"):
         _io = it["io"]
         _iop = []
@@ -522,6 +531,20 @@ _arows = ["    { " + ", ".join(f'{k}:{_js(a[k])}' for k in _af) + " }" for a in 
 AIRLINES_JS = "  const AIRLINES = [\n" + ",\n".join(_arows) + "\n  ];\n"
 TOOL_SCRIPT = TOOL_SCRIPT.replace("/*__AIRLINES__*/", AIRLINES_JS)
 assert "const AIRLINES" in TOOL_SCRIPT
+
+# 도착 국가 규정도 _dest.py 에서 만든다
+_crows = ["    { " + ", ".join(f'{k}:{_js(c[k])}' for k in ("id","name","flag","region","head")) + " }"
+          for c in DCOUNTRIES]
+_drows = []
+for c in DCOUNTRIES:
+    tbl = DRULES[c["id"]]
+    inner = ", ".join(f'{g}:[{_js(tbl[g][0])},{_js(tbl[g][1])}]' for g in _dest.GORDER if g in tbl)
+    _drows.append(f'    {c["id"]}:{{ {inner} }}')
+DEST_JS = ("  const COUNTRIES = [\n" + ",\n".join(_crows) + "\n  ];\n\n"
+           "  const REGIONS = " + _js(DREGIONS) + ";\n\n"
+           "  const DEST = {\n" + ",\n".join(_drows) + "\n  };\n")
+TOOL_SCRIPT = TOOL_SCRIPT.replace("/*__DEST__*/", DEST_JS)
+assert "const DEST" in TOOL_SCRIPT and "const COUNTRIES" in TOOL_SCRIPT
 
 # 2) 검색엔진이 읽는 정적 목록도 같은 데이터에서 만든다
 VLABEL = {"both":"기내 · 위탁 모두 가능","cabin":"기내만 가능","checked":"위탁만 가능",
@@ -590,14 +613,63 @@ def _static_io():
     out.append('</article></section>')
     return "\n".join(out)
 
-STATIC_ITEMS = _static_items() + "\n" + _static_io()
+def _static_dest():
+    IOL = {"ok": ("반입 가능", "var(--v-both)"), "declare": ("신고 · 조건부", "var(--v-checked)"),
+           "ban": ("반입 금지", "var(--v-ban)"), "warn": ("확인 필요", "var(--v-cond)")}
+    nav = " ".join(f'<a class="btn ghost" href="#dest-{c["id"]}">{c["flag"]} {c["name"].split(" ")[0]}</a>'
+                   for c in DCOUNTRIES)
+    out = ['<section class="wrap" id="by-country" style="margin-top:44px">',
+           '<article class="post" style="max-width:none">',
+           f'<h2>도착 국가별 반입 규정 {len(DCOUNTRIES)}개국</h2>',
+           '<p>같은 김치라도 <strong>어느 나라에 들고 가느냐</strong>에 따라 결과가 완전히 달라집니다. '
+           '대만은 육류가 든 라면 스프만으로 900만 원대 과태료가 나오고, 싱가포르는 담배 한 개비에도 세금을 매기고, '
+           '홍콩은 전자담배를 들고 있는 것만으로 처벌합니다. '
+           '<a href="tool.html">수하물 판별기</a>에서 <strong>국제선 출국</strong>을 고르고 도착 국가를 선택하면 '
+           '물건을 검색할 때마다 같은 내용이 품목 카드에 함께 나옵니다.</p>',
+           '<div class="callout warn"><p><strong>확인 필요</strong>로 표시한 칸은 공식 자료에서 여행자 기준을 '
+           '찾지 못한 항목입니다. 지어내지 않고 그대로 남겨 두었으니, 그 품목은 출발 전 해당 국가 세관·검역 '
+           '안내를 직접 확인하거나 아예 가져가지 않는 편이 안전합니다.</p></div>',
+           f'<p style="display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 8px">{nav}</p>']
+    for c in DCOUNTRIES:
+        tbl = DRULES[c["id"]]
+        out.append(f'<h3 id="dest-{c["id"]}" style="scroll-margin-top:110px;font-size:19px;margin-top:34px">'
+                   f'{c["flag"]} {c["name"]}</h3>')
+        out.append(f'<p style="margin-top:-4px;color:var(--muted);font-size:14px">{c["head"]}</p>')
+        out.append('<div class="tablewrap"><table>'
+                   '<thead><tr><th style="min-width:150px">품목</th><th style="width:96px">판정</th>'
+                   '<th>기준과 주의할 점</th></tr></thead><tbody>')
+        for g in _dest.GORDER:
+            if g not in tbl: continue
+            v, txt = tbl[g]
+            lab, col = IOL[v]
+            out.append(f'<tr><td>{_html.escape(_dest.GNAMES[g])}</td>'
+                       f'<td style="font-size:12.5px;font-weight:700;color:{col}">{lab}</td>'
+                       f'<td style="font-size:12.8px;color:var(--muted)">{txt}</td></tr>')
+        out.append('</tbody></table></div>')
+    out.append('<p style="font-size:13px;color:var(--muted)">조사 기준일은 2026년 9월이며 각국 세관·검역 당국의 '
+               '공식 안내를 근거로 정리했습니다. 규정은 동물 질병 발생이나 법 개정으로 자주 바뀌니 출발 전 한 번 더 '
+               '확인해 주세요. 애매하면 신고하는 쪽이 항상 유리합니다 — 대부분의 나라가 신고한 물건은 반입이 막혀도 '
+               '처벌하지 않고 그 자리에서 폐기로 끝냅니다.</p>')
+    out.append('</article></section>')
+    return "\n".join(out)
+
+DEST_TABLES = _static_dest()
+STATIC_ITEMS = _static_items() + "\n" + _static_io() + """
+<section class="wrap" style="margin-top:34px"><article class="post" style="max-width:none">
+<h2>도착 국가별 반입 규정</h2>
+<p>같은 김치라도 <strong>어느 나라에 들고 가느냐</strong>에 따라 결과가 완전히 달라집니다.
+대만은 육류가 든 라면 스프만으로 900만 원대 과태료가 나오고, 싱가포르는 담배 한 개비에도 세금을 매기고,
+홍콩은 전자담배를 들고 있는 것만으로 처벌합니다.
+위쪽에서 <strong>국제선 출국</strong>을 고르고 도착 국가를 선택하면 그 나라 기준이 품목 카드에 함께 나와요.</p>
+<p><a class="btn" href="country.html">나라별 반입 규정 """ + str(len(DCOUNTRIES)) + """개국 전체 보기 →</a></p>
+</article></section>"""
 
 page(path="tool.html", cur="tool.html", depth=0,
      title=f"수하물 판별기 — 기내? 위탁? | {SITE_NAME}",
-     desc=f"항공사와 노선을 고르고 물건 이름을 검색하면 기내·위탁·반입금지를 바로 알려줍니다. 항공사 {len(AIRLINES)}곳, 품목 {len(ITEMS)}개.",
+     desc=f"항공사·노선·도착 국가를 고르고 물건 이름을 검색하면 기내·위탁·반입금지와 그 나라 검역 규정을 바로 알려줍니다. 항공사 {len(AIRLINES)}곳, 품목 {len(ITEMS)}개, {len(DCOUNTRIES)}개국.",
      head_extra=TOOL_STYLE + "\n<style>.controls{top:52px; z-index:25}</style>\n",
      body=f"""{hero("Cabin · Checked · Prohibited", "이 짐, 들고 탈까 부칠까",
-       f"물건 이름을 치면 기내·위탁·반입금지를 신호등처럼 알려드려요. 국제선은 출국·입국을 나눠 <strong>검역과 세관</strong>까지 확인할 수 있습니다. 항공사 {len(AIRLINES)}곳, 품목 {len(ITEMS)}개.")}
+       f"물건 이름을 치면 기내·위탁·반입금지를 신호등처럼 알려드려요. 국제선은 출국·입국을 나눠 <strong>도착 국가별 검역과 세관</strong>까지 확인할 수 있습니다. 항공사 {len(AIRLINES)}곳, 품목 {len(ITEMS)}개, 나라 {len(DCOUNTRIES)}개국.")}
 
 {TOOL_BODY}
 
@@ -605,8 +677,50 @@ page(path="tool.html", cur="tool.html", depth=0,
 
 {TOOL_SCRIPT}""")
 
+
+# ── 나라별 반입 규정 페이지 ────────────────────
+_faq = [
+  ("라면은 해외에 들고 갈 수 있나요?",
+   "면과 건더기는 대부분 괜찮지만 스프에 든 육류 성분이 문제가 됩니다. 일본·대만·중국·미국·유럽연합은 육류가 들어간 가공식품을 금지하고 있어, 소고기맛·돼지고기맛 라면은 막힐 수 있어요. 해물맛이나 채식 라면으로 바꿔 가는 편이 안전합니다."),
+  ("김치를 가져가도 되나요?",
+   "육류나 젓갈 성분이 없고 상업용으로 포장된 제품이면 미국·캐나다·싱가포르 등 많은 나라에서 신고 후 통과됩니다. 다만 호주·뉴질랜드는 모든 식품이 신고 대상이고, 중국은 신선 채소가 그대로 든 제품을 막을 수 있어요. 액체로 새지 않게 밀봉하고 반드시 신고하세요."),
+  ("전자담배를 가져가면 안 되는 나라는 어디인가요?",
+   "싱가포르·태국·베트남·홍콩·대만은 반입 자체가 금지이고 소지만으로도 처벌받습니다. 싱가포르는 수입 시 최대 징역 9년, 대만은 최대 NT$500만 과태료예요. 일본은 니코틴 액상 120ml까지, 중국은 액상 12ml까지 수량 제한이 있습니다."),
+  ("신고하면 벌금을 내나요?",
+   "대부분의 나라는 반대입니다. 미국·호주는 가져온 농산물을 모두 신고하면 반입 불가 판정이 나와도 처벌하지 않고 그 자리에서 폐기하고 끝냅니다. 벌금은 신고하지 않았을 때 나옵니다. 호주는 미신고 시 현장 과태료가 A$660부터, 뉴질랜드는 고의가 아니어도 NZ$400입니다."),
+  ("면세점에서 산 술과 담배는 몇 개까지 되나요?",
+   "나라마다 크게 다릅니다. 홍콩은 담배 19개비, 호주는 25개비뿐이고 싱가포르와 말레이시아는 면세 한도가 아예 없어 1개비도 과세됩니다. 반대로 중국은 400개비, 필리핀은 400개비까지 허용해요. 위 표에서 도착 국가를 확인하세요."),
+]
+_faq_ld = json.dumps({
+  "@context":"https://schema.org","@type":"FAQPage",
+  "mainEntity":[{"@type":"Question","name":q,
+                 "acceptedAnswer":{"@type":"Answer","text":a}} for q, a in _faq]
+}, ensure_ascii=False)
+
+_faq_html = ('<section class="wrap" style="margin-top:44px"><article class="post" style="max-width:none">'
+             '<h2>자주 묻는 질문</h2>'
+             + "".join(f'<h3 style="font-size:17px;margin-top:24px">{q}</h3><p>{a}</p>' for q, a in _faq)
+             + '</article></section>')
+
+page(path="country.html", cur="country.html", depth=0,
+     title=f"나라별 반입 규정 {len(DCOUNTRIES)}개국 — 식품·담배·의약품 | {SITE_NAME}",
+     desc="일본·중국·대만·베트남·태국·미국·호주 등 14개국에 무엇을 들고 갈 수 있는지 품목별로 정리했습니다. 육류·유제품·과일·전자담배·의약품 기준과 면세 한도, 미신고 과태료까지.",
+     head_extra=f'<script type="application/ld+json">{_faq_ld}</script>',
+     body=f"""{hero("Destination Rules", "이 나라, 뭘 들고 갈 수 있을까",
+       f"같은 김치라도 도착하는 나라에 따라 결과가 달라집니다. {len(DCOUNTRIES)}개국의 검역·세관 기준을 품목별로 모았어요.")}
+
+{DEST_TABLES}
+
+{_faq_html}
+
+<section class="wrap" style="margin-top:34px"><article class="post" style="max-width:none">
+<p><a class="btn" href="tool.html">수하물 판별기에서 품목별로 확인하기 →</a></p>
+<p style="font-size:13.5px;color:var(--muted)">판별기 위쪽에서 <strong>국제선 출국</strong>을 고르고 도착 국가를 선택하면,
+물건을 검색할 때마다 기내·위탁 판정과 그 나라 반입 기준이 함께 나옵니다.</p>
+</article></section>""")
+
 # ── robots · sitemap · ads.txt ───────────────
-PAGES_FOR_SITEMAP = ["index.html", "tool.html", "guide/index.html", "about.html",
+PAGES_FOR_SITEMAP = ["index.html", "tool.html", "country.html", "guide/index.html", "about.html",
                      "contact.html", "privacy.html", "terms.html"] + [p["slug"] for p in POSTS]
 
 (ROOT / "robots.txt").write_text(
@@ -619,7 +733,7 @@ Sitemap: {SITE_URL}/sitemap.xml
 urls = "\n".join(
     f"  <url>\n    <loc>{SITE_URL}/{u[:-len(chr(105)+chr(110)+chr(100)+chr(101)+chr(120)+chr(46)+chr(104)+chr(116)+chr(109)+chr(108))] if u.endswith(chr(105)+chr(110)+chr(100)+chr(101)+chr(120)+chr(46)+chr(104)+chr(116)+chr(109)+chr(108)) else u}</loc>\n"
     f"    <lastmod>{TODAY}</lastmod>\n"
-    f"    <priority>{'1.0' if u=='index.html' else '0.9' if u=='tool.html' else '0.7'}</priority>\n  </url>"
+    f"    <priority>{'1.0' if u=='index.html' else '0.9' if u in ('tool.html','country.html') else '0.7'}</priority>\n  </url>"
     for u in PAGES_FOR_SITEMAP)
 (ROOT / "sitemap.xml").write_text(
 f"""<?xml version="1.0" encoding="UTF-8"?>
