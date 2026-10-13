@@ -244,6 +244,28 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 .adv .f{margin:8px 0 0}
 .pnote{font-size:15px;color:var(--muted);margin:0}
 .toast{position:absolute;left:50%;bottom:130px;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:22px;font-weight:700;padding:14px 28px;border-radius:20px;z-index:9;white-space:nowrap}
+
+/* 선생님용 시간표 입력 표 */
+.schedOpen{width:100%;height:58px;border-radius:16px;background:var(--ink);color:#fff;font-size:20px;font-weight:700}
+.schedOverlay{position:absolute;inset:0;z-index:6;background:rgba(30,41,68,.58);display:grid;place-items:center}
+.schedPanel{width:1320px;height:750px;background:#fff;border-radius:28px;display:grid;grid-template-rows:78px minmax(0,1fr) 82px;overflow:hidden;box-shadow:0 18px 50px rgba(30,41,68,.22)}
+.schedPanel header,.schedPanel footer{display:flex;align-items:center;gap:16px;padding:0 30px}
+.schedPanel header{border-bottom:2px solid var(--line)}
+.schedPanel h2{font:400 36px var(--display);margin:0;flex:1}
+.schedPanel header button{height:52px;padding:0 20px;border-radius:14px;background:var(--paper);font-size:19px;font-weight:700}
+.schedScroll{overflow:auto;padding:16px 22px}
+.schedTable{width:100%;border-collapse:separate;border-spacing:8px;table-layout:fixed}
+.schedTable th{font-family:var(--display);font-weight:400;text-align:center}
+.schedTable thead th{position:sticky;top:0;z-index:2;height:48px;background:var(--ink);color:#fff;font-size:25px;border-radius:13px}
+.schedTable thead th:first-child{width:102px}
+.schedTable tbody th{height:64px;background:var(--accent-soft);color:#9C431B;border-radius:13px;font-size:24px}
+.schedTable td{padding:0}
+.schedTable input{box-sizing:border-box;width:100%;height:64px;padding:0 12px;border:3px solid var(--line);border-radius:14px;background:#F8FBF8;color:var(--ink);font:700 21px var(--body);text-align:center}
+.schedTable input::placeholder{font-weight:500;color:#829087}
+.schedTable input:focus{background:#fff;border-color:var(--sky)}
+.schedPanel footer{border-top:2px solid var(--line)}
+.schedPanel footer p{flex:1;font-size:18px;color:var(--muted);font-weight:700}
+.schedPanel footer button{height:56px;padding:0 28px;border-radius:16px;background:var(--accent);color:#fff;font-size:21px;font-weight:700}
 </style>
 </head>
 <body>
@@ -634,8 +656,10 @@ $('#tBtn').onclick=()=>{
       <div class="f"><span class="lab">할 활동</span><div class="checks">${STEP_DEF.filter(s=>s.id!=='sum').map(s=>`<label><input type="checkbox" id="sS_${s.id}" ${S.steps[s.id]?'checked':''}>${s.label}</label>`).join('')}</div></div>
     </div>
     <div>
-      <div class="f"><span class="lab">요일별 시간표</span><small>쉼표로 나눠 써요(최대 9칸). ‘점심’을 넣으면 점심시간 칸이 돼요</small>
-        <div class="wk">${[1,2,3,4,5].map(w=>`<span>${WD[w]}</span><input type="text" id="sP${w}" value="${esc(S.plan[w]||'')}">`).join('')}</div></div>
+      <div class="f"><span class="lab">요일별 시간표</span><small>월요일부터 금요일까지 표에 과목을 넣어요.</small>
+        <button class="schedOpen" id="editSchedule" type="button">시간표 표로 입력하기</button>
+        <small id="schedSummary">1교시부터 최대 9교시까지 입력할 수 있어요.</small>
+        ${[1,2,3,4,5].map(w=>`<input type="hidden" id="sP${w}" value="${esc(S.plan[w]||'')}">`).join('')}</div>
       <div class="f"><label for="sSub">학생이 고를 과목 카드</label><small>쉼표로 나눠 써요(최대 12개). 시간표에 있는 과목은 자동으로 더해져요</small><input type="text" id="sSub" value="${esc(S.subjects)}"></div>
       <div class="f"><span class="lab">일과 고르기 방법</span><div class="checks one"><label><input type="checkbox" id="sCheck" ${S.planCheck?'checked':''}>시간표와 맞는지 확인하기 (끄면 자유롭게 넣어요)</label></div></div>
     </div>
@@ -653,6 +677,27 @@ $('#tBtn').onclick=()=>{
     </div>
    </div>
    <footer><button class="btn warn" id="rBtn">오늘 기록 지우기</button><button class="btn" id="dBtn">예시로 되돌리기</button><button class="btn main" id="okBtn">저장하고 닫기</button></footer></div>`;
+  $('#editSchedule').onclick=()=>{
+    const days=[1,2,3,4,5];
+    const values=Object.fromEntries(days.map(w=>[w,splitList($('#sP'+w).value).slice(0,9)]));
+    const subjects=uniq([...splitList($('#sSub').value),...days.flatMap(w=>values[w]),'점심']);
+    const overlay=document.createElement('div');overlay.className='schedOverlay';
+    overlay.innerHTML=`<div class="schedPanel" role="dialog" aria-modal="true" aria-label="요일별 시간표 입력">
+      <header><h2>요일별 시간표</h2><button id="scheduleCancel" type="button">닫기</button></header>
+      <div class="schedScroll"><table class="schedTable"><thead><tr><th scope="col">교시</th>${days.map(w=>`<th scope="col">${WD[w]}요일</th>`).join('')}</tr></thead>
+      <tbody>${Array.from({length:9},(_,i)=>`<tr><th scope="row">${i+1}교시</th>${days.map(w=>`<td><input type="text" data-day="${w}" data-period="${i}" list="scheduleSubjects" maxlength="24" aria-label="${WD[w]}요일 ${i+1}교시" placeholder="과목"></td>`).join('')}</tr>`).join('')}</tbody></table>
+      <datalist id="scheduleSubjects">${subjects.map(s=>`<option value="${esc(s)}"></option>`).join('')}</datalist></div>
+      <footer><p>1교시부터 차례로 적어요. 아래로 내려 8·9교시도 입력할 수 있어요.</p><button id="scheduleApply" type="button">표 적용</button></footer></div>`;
+    sh.appendChild(overlay);
+    days.forEach(w=>values[w].forEach((v,i)=>{overlay.querySelector(`[data-day="${w}"][data-period="${i}"]`).value=v}));
+    const closeSchedule=()=>{overlay.remove();$('#editSchedule').focus()};
+    overlay.querySelector('#scheduleCancel').onclick=closeSchedule;
+    overlay.querySelector('#scheduleApply').onclick=()=>{
+      days.forEach(w=>{$('#sP'+w).value=Array.from({length:9},(_,i)=>overlay.querySelector(`[data-day="${w}"][data-period="${i}"]`).value.trim()).filter(Boolean).join(', ')});
+      closeSchedule();$('#schedSummary').textContent='시간표를 입력했어요. 아래 저장하고 닫기를 눌러 주세요.'};
+    overlay.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();closeSchedule()}};
+    overlay.querySelector('[data-day="1"][data-period="0"]').focus();
+  };
   const close=()=>{sh.hidden=true;sh.innerHTML='';$('#tBtn').focus()};
   let chosen=S.school;
   sh.querySelectorAll('input[name=sMeal]').forEach(r=>r.onchange=()=>{const a=$('#sMealAuto').checked;$('#autoBox').hidden=!a;$('#manBox').hidden=a});
