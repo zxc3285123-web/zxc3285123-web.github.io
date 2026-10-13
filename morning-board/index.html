@@ -687,9 +687,36 @@ $('#tBtn').onclick=()=>{
       <div class="schedScroll"><table class="schedTable"><thead><tr><th scope="col">교시</th>${days.map(w=>`<th scope="col">${WD[w]}요일</th>`).join('')}</tr></thead>
       <tbody>${Array.from({length:9},(_,i)=>`<tr><th scope="row">${i+1}교시</th>${days.map(w=>`<td><input type="text" data-day="${w}" data-period="${i}" list="scheduleSubjects" maxlength="24" aria-label="${WD[w]}요일 ${i+1}교시" placeholder="과목"></td>`).join('')}</tr>`).join('')}</tbody></table>
       <datalist id="scheduleSubjects">${subjects.map(s=>`<option value="${esc(s)}"></option>`).join('')}</datalist></div>
-      <footer><p>1교시부터 차례로 적어요. 아래로 내려 8·9교시도 입력할 수 있어요.</p><button id="scheduleApply" type="button">표 적용</button></footer></div>`;
+      <footer><p id="scheduleHelp" role="status">한셀·엑셀에서 표를 복사한 뒤 월요일 1교시 칸에 붙여넣으세요. 아래로 내려 8·9교시도 입력할 수 있어요.</p><button id="scheduleApply" type="button">표 적용</button></footer></div>`;
     sh.appendChild(overlay);
     days.forEach(w=>values[w].forEach((v,i)=>{overlay.querySelector(`[data-day="${w}"][data-period="${i}"]`).value=v}));
+    overlay.querySelector('.schedTable').addEventListener('paste',e=>{
+      const target=e.target.closest('input[data-day][data-period]');
+      if(!target)return;
+      const text=e.clipboardData.getData('text/plain');
+      if(!/[\t\r\n]/.test(text))return;
+      e.preventDefault();
+      const rows=text.replace(/\r\n?/g,'\n').replace(/\n$/,'').split('\n').map(line=>line.split('\t').map(cell=>cell.trim()));
+      const dayOf=value=>({월:1,월요일:1,화:2,화요일:2,수:3,수요일:3,목:4,목요일:4,금:5,금요일:5})[value.replace(/\s/g,'')]||0;
+      const periodOf=value=>{const m=/^(\d{1,2})\s*(?:교시)?$/.exec(value);return m?Number(m[1])-1:null};
+      const header=rows[0].map(dayOf),hasHeader=header.filter(Boolean).length>=2;
+      if(hasHeader)rows.shift();
+      const hasPeriods=rows.length>0&&rows.every(row=>periodOf(row[0]||'')!==null&&row.length>1);
+      const startDay=Number(target.dataset.day),startPeriod=Number(target.dataset.period);
+      let count=0;
+      rows.forEach((row,ri)=>{
+        const period=hasPeriods?periodOf(row[0]):startPeriod+ri;
+        if(period<0||period>8)return;
+        row.forEach((value,ci)=>{
+          if(hasPeriods&&ci===0)return;
+          const day=hasHeader?header[ci-(hasPeriods&&header[0]?1:0)]:startDay+ci-(hasPeriods?1:0);
+          if(day<1||day>5)return;
+          const cell=overlay.querySelector(`[data-day="${day}"][data-period="${period}"]`);
+          if(cell){cell.value=value.slice(0,24);count++}
+        });
+      });
+      overlay.querySelector('#scheduleHelp').textContent=count?`${count}칸에 붙여넣었어요. 확인한 뒤 표 적용을 눌러 주세요.`:'붙여넣을 칸을 찾지 못했어요. 월요일 1교시 칸에서 다시 해 주세요.';
+    });
     const closeSchedule=()=>{overlay.remove();$('#editSchedule').focus()};
     overlay.querySelector('#scheduleCancel').onclick=closeSchedule;
     overlay.querySelector('#scheduleApply').onclick=()=>{
