@@ -170,13 +170,18 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 .al span{font-weight:700;padding:1px 8px;border-radius:9px;background:var(--paper);color:var(--muted);white-space:nowrap}
 .dish.seen{border-color:var(--leaf);box-shadow:0 5px 0 var(--leaf)}
 
-/* 급식 이름 따라 쓰기 */
-.dish{flex-direction:column;align-items:stretch;gap:5px;padding:8px 10px}
-.dishTop{display:flex;align-items:center;gap:9px;width:100%;min-width:0;flex:1;min-height:0;text-align:left}
-.dishTop svg{flex-shrink:0}
-.dishTrace{position:relative;height:52px;flex-shrink:0;border:2px solid #BFD1C4;border-radius:12px;background:linear-gradient(transparent 48%,#E6EDE7 49%,#E6EDE7 51%,transparent 52%),#F8FBF8;overflow:hidden}
-.traceGuide{position:absolute;inset:0 8px;display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;color:#B4C1B8;font-family:var(--display);pointer-events:none}
-.traceCanvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+/* 급식 이름 따라 쓰기: 메뉴를 누르면 한 가지씩 크게 연습 */
+.writingOverlay{position:absolute;inset:0;z-index:7;display:grid;place-items:center;background:rgba(30,41,68,.58)}
+.writingPanel{width:1300px;height:730px;box-sizing:border-box;padding:26px 34px 30px;display:flex;flex-direction:column;gap:18px;border-radius:30px;background:var(--card);box-shadow:0 22px 60px rgba(30,41,68,.25)}
+.writingHead{display:flex;align-items:center;gap:20px;min-height:72px}
+.writingHead h2{font:400 52px/1.1 var(--display);margin:0;flex:1;min-width:0;overflow-wrap:anywhere}
+.writingHead button,.writingActions button{height:64px;padding:0 26px;border-radius:18px;font:700 24px var(--body);background:var(--paper)}
+.writingPanel p{margin:0;color:var(--muted);font-size:25px;font-weight:700}
+.writingSurface{position:relative;flex:1;min-height:0;border:4px solid #BFD1C4;border-radius:26px;background:linear-gradient(transparent 49%,#E2EBE4 49.5%,#E2EBE4 50.5%,transparent 51%),#F8FBF8;overflow:hidden}
+.writingGuide{position:absolute;inset:0 24px;display:grid;place-items:center;white-space:nowrap;color:#AFBDB2;font-family:var(--display);pointer-events:none}
+.writingCanvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.writingActions{display:flex;gap:16px;justify-content:flex-end}
+.writingActions .nextDish{background:var(--ink);color:#fff}
 
 /* 정리 */
 .sum{display:grid;grid-template-columns:360px 1fr 340px;gap:16px;margin-top:16px;flex:1;min-height:0}
@@ -590,43 +595,54 @@ R.plan=m=>{
   lastSay=slotSel===null?'오늘은 '+items.filter(x=>!x.lunch).map(x=>x.n+'교시 '+D.pick[items.indexOf(x)]).join(', ')+'.':`${items[slotSel].n}교시는 무엇을 배울까요?`;
 };
 R.lunch=m=>{
+  $('#writingOverlay')?.remove();
   const ds=dishes(),n=Math.max(ds.length,1);
   const cols=n<=3?n:n<=6?3:4,rows=Math.ceil(n/cols);
-  const H=430,G=16,dh=Math.min(rows===1?330:rows===2?210:150,Math.floor((H-(rows-1)*G)/rows));
-  const traceH=rows===1?110:rows===2?86:58;
-  const ic=rows<=2?70:44,af=rows<=2?14:11;
-  const cw=(MAIN_W-(cols-1)*G)/cols,textW=cw-ic-52;
-  const nfOf=s=>Math.floor(Math.max(18,Math.min(rows<=2?34:27,textW/Math.max(s.length,1)*.94)));
-  const guideSize=s=>Math.floor(Math.max(18,Math.min(rows===1?64:rows===2?48:30,(cw-40)/Math.max(s.length,1))));
+  const H=410,G=16,dh=Math.min(170,Math.floor((H-(rows-1)*G)/rows));
+  const ic=rows<=2?84:60,af=rows<=2?16:14;
+  const cw=(MAIN_W-(cols-1)*G)/cols,textW=cw-ic-14-52;
+  const nfOf=s=>Math.floor(Math.max(18,Math.min(rows<=2?40:30,textW/Math.max(s.length,1)*.94)));
   const am=autoMeal();
   const src=am?`${esc(S.school.name)} 급식`:(S.sample?'지금은 예시 메뉴예요':'');
   const empty=!am?'선생님 화면에서 학교를 등록해 주세요.':
     {loading:'급식을 불러오고 있어요.',
      error:am.error||'학교 급식을 불러오지 못했어요. 잠시 후 다시 열어 주세요.',
      noday:'오늘은 학교 급식 정보가 없어요.'}[am.state]||'';
-  m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘 점심은 무엇일까요?</h1><p class="sub">메뉴를 누르고, 흐린 글씨를 손가락이나 펜으로 따라 써요${src?' · '+src:''}</p></div><div class="say" id="say"></div><button class="mini-btn" id="clearWriting" ${ds.length?'':'hidden'}>쓴 글씨 지우기</button></div>
-    <div class="tray" id="tray" style="grid-template-columns:repeat(${cols},1fr);grid-auto-rows:${dh}px">${ds.map((x,i)=>`<div class="dish ${D.dishes[i]?'seen':''}"><button class="dishTop" data-i="${i}" aria-label="${esc(x.name)} 메뉴 확인">${dishIcon(i,ic)}<span class="tx"><b style="font-size:${nfOf(x.name)}px">${esc(x.name)}</b>${x.al.length?`<span class="al">${(rows<=2?x.al:x.al.slice(0,3)).map(k=>`<span style="font-size:${af}px">${k} ${ALLERGY[k]}</span>`).join('')}${rows>2&&x.al.length>3?`<span style="font-size:${af}px">외 ${x.al.length-3}</span>`:''}</span>`:''}</span></button><div class="dishTrace" style="height:${traceH}px"><span class="traceGuide" style="font-size:${guideSize(x.name)}px">${esc(x.name)}</span><canvas class="traceCanvas" data-i="${i}" aria-label="${esc(x.name)} 따라 쓰기"></canvas></div></div>`).join('')||`<p class="rest" style="grid-column:1/-1;font-size:40px;margin-top:40px">${empty}</p>`}</div>`;
-  $('#tray').onclick=e=>{const b=e.target.closest('.dishTop');if(!b)return;const i=+b.dataset.i,x=ds[i];D.dishes[i]=1;saveDay();b.closest('.dish').classList.add('seen');
-    setSay($('#say'),ieyo(x.name));speak(ieyo(x.name)+'.');paintSteps()};
-  const renderInk=(canvas,paths)=>{
-    const ctx=canvas.getContext('2d'),dpr=window.devicePixelRatio||1;
-    ctx.clearRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#1E2944';ctx.fillStyle='#1E2944';ctx.lineWidth=4*dpr;ctx.lineCap='round';ctx.lineJoin='round';
-    paths.forEach(path=>{if(!path.length)return;if(path.length===1){ctx.beginPath();ctx.arc(path[0][0]*canvas.width,path[0][1]*canvas.height,2*dpr,0,Math.PI*2);ctx.fill();return}
-      ctx.beginPath();path.forEach(([x,y],i)=>i?ctx.lineTo(x*canvas.width,y*canvas.height):ctx.moveTo(x*canvas.width,y*canvas.height));ctx.stroke()})};
-  $('#tray').querySelectorAll('.traceCanvas').forEach(canvas=>{
-    const i=+canvas.dataset.i,name=ds[i].name,dpr=window.devicePixelRatio||1;
+  m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘 점심은 무엇일까요?</h1><p class="sub">메뉴를 하나 누르면 큰 글씨 따라 쓰기가 열려요${src?' · '+src:''}</p></div><div class="say" id="say"></div></div>
+    <div class="tray" id="tray" style="grid-template-columns:repeat(${cols},1fr);grid-auto-rows:${dh}px">${ds.map((x,i)=>`<button class="dish ${D.dishes[i]?'seen':''}" data-i="${i}" aria-label="${esc(x.name)} 따라 쓰기 열기">${dishIcon(i,ic)}<span class="tx"><b style="font-size:${nfOf(x.name)}px">${esc(x.name)}</b>${x.al.length?`<span class="al">${(rows<=2?x.al:x.al.slice(0,3)).map(k=>`<span style="font-size:${af}px">${k} ${ALLERGY[k]}</span>`).join('')}${rows>2&&x.al.length>3?`<span style="font-size:${af}px">외 ${x.al.length-3}</span>`:''}</span>`:''}</span></button>`).join('')||`<p class="rest" style="grid-column:1/-1;font-size:40px;margin-top:40px">${empty}</p>`}</div>`;
+  const openPractice=i=>{
+    const x=ds[i],name=x.name,card=$('#tray').querySelector(`[data-i="${i}"]`);
+    D.dishes[i]=1;saveDay();card.classList.add('seen');paintSteps();setSay($('#say'),name);
+    const overlay=document.createElement('div');overlay.className='writingOverlay';overlay.id='writingOverlay';
+    const fontSize=Math.max(30,Math.min(110,Math.floor(1130/Math.max(name.length,1))));
+    overlay.innerHTML=`<div class="writingPanel" role="dialog" aria-modal="true" aria-label="${esc(name)} 따라 쓰기">
+      <div class="writingHead"><h2>${esc(name)}</h2><button id="writingClose" type="button">닫기</button></div>
+      <p>${i+1} / ${ds.length} · 흐린 글씨를 손가락이나 펜으로 따라 써요.</p>
+      <div class="writingSurface"><span class="writingGuide" style="font-size:${fontSize}px">${esc(name)}</span><canvas class="writingCanvas" aria-label="${esc(name)} 따라 쓰는 자리"></canvas></div>
+      <div class="writingActions"><button id="writingClear" type="button">지우고 다시 쓰기</button><button class="nextDish" id="writingNext" type="button">${i<ds.length-1?'다음 메뉴':'메뉴로 돌아가기'}</button></div></div>`;
+    $('#stage').appendChild(overlay);
+    const canvas=overlay.querySelector('canvas'),dpr=window.devicePixelRatio||1;
     canvas.width=Math.round(canvas.clientWidth*dpr);canvas.height=Math.round(canvas.clientHeight*dpr);
-    const saved=D.writing[i];let paths=saved&&saved.name===name?saved.paths:[];renderInk(canvas,paths);
-    canvas.resetInk=()=>{paths=[];renderInk(canvas,paths)};
-    let active=null;
-    const addPoint=e=>{const rect=canvas.getBoundingClientRect(),p=[Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width)),Math.max(0,Math.min(1,(e.clientY-rect.top)/rect.height))];
-      const prev=active[active.length-1];if(!prev||Math.hypot(p[0]-prev[0],p[1]-prev[1])>.006){active.push(p);renderInk(canvas,paths)}};
+    const saved=D.writing[i];let paths=saved&&saved.name===name?saved.paths:[];
+    const renderInk=()=>{
+      const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#1E2944';ctx.fillStyle='#1E2944';ctx.lineWidth=7*dpr;ctx.lineCap='round';ctx.lineJoin='round';
+      paths.forEach(path=>{if(!path.length)return;if(path.length===1){ctx.beginPath();ctx.arc(path[0][0]*canvas.width,path[0][1]*canvas.height,3.5*dpr,0,Math.PI*2);ctx.fill();return}
+        ctx.beginPath();path.forEach(([px,py],j)=>j?ctx.lineTo(px*canvas.width,py*canvas.height):ctx.moveTo(px*canvas.width,py*canvas.height));ctx.stroke()})};
+    renderInk();let active=null;
+    const addPoint=e=>{const rect=canvas.getBoundingClientRect(),point=[Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width)),Math.max(0,Math.min(1,(e.clientY-rect.top)/rect.height))];
+      const prev=active[active.length-1];if(!prev||Math.hypot(point[0]-prev[0],point[1]-prev[1])>.004){active.push(point);renderInk()}};
     canvas.onpointerdown=e=>{e.preventDefault();canvas.setPointerCapture(e.pointerId);active=[];paths.push(active);addPoint(e)};
     canvas.onpointermove=e=>{if(active){e.preventDefault();addPoint(e)}};
     const finish=()=>{if(!active)return;D.writing[i]={name,paths};saveDay();active=null};
     canvas.onpointerup=finish;canvas.onpointercancel=finish;
-  });
-  $('#clearWriting').onclick=()=>{D.writing={};saveDay();$('#tray').querySelectorAll('.traceCanvas').forEach(c=>c.resetInk());setSay($('#say'),'다시 따라 써요')};
+    const close=()=>{finish();overlay.remove();card.focus()};
+    overlay.querySelector('#writingClose').onclick=close;
+    overlay.querySelector('#writingClear').onclick=()=>{paths=[];D.writing[i]={name,paths};saveDay();renderInk()};
+    overlay.querySelector('#writingNext').onclick=()=>{close();if(i<ds.length-1)openPractice(i+1)};
+    overlay.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();close()}};
+    overlay.querySelector('#writingClose').focus();
+  };
+  $('#tray').onclick=e=>{const card=e.target.closest('.dish');if(card)openPractice(+card.dataset.i)};
   lastSay='오늘 점심은 '+ds.map(x=>x.name).join(', ')+(ds.length?'이에요.':'');
 };
 R.sum=m=>{
