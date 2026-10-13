@@ -152,7 +152,7 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 .slot.full{border-color:var(--leaf);box-shadow:0 5px 0 var(--leaf)}
 .slot.sel{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 5px 0 var(--accent);transform:translateY(-4px)}
 .palLab{font-size:20px;font-weight:700;color:var(--muted);margin:20px 0 8px;flex-shrink:0}
-.pal{display:grid;gap:12px;flex:1;min-height:0}
+.pal{display:grid;gap:12px;flex:1;min-height:0;overflow-y:auto;align-content:start;padding:2px 4px 8px}
 .pal .choice{grid-auto-flow:column;justify-content:start;gap:12px;padding:0 14px;border-radius:20px;font-size:28px;text-align:left;line-height:1.1;word-break:keep-all;min-width:0;overflow:hidden}
 .pal svg{width:56px;height:56px}
 .pal .choice.no{opacity:.3}
@@ -169,6 +169,14 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 .al{display:flex;flex-wrap:wrap;gap:4px 6px;margin-top:6px}
 .al span{font-weight:700;padding:1px 8px;border-radius:9px;background:var(--paper);color:var(--muted);white-space:nowrap}
 .dish.seen{border-color:var(--leaf);box-shadow:0 5px 0 var(--leaf)}
+
+/* 급식 이름 따라 쓰기 */
+.dish{flex-direction:column;align-items:stretch;gap:5px;padding:8px 10px}
+.dishTop{display:flex;align-items:center;gap:9px;width:100%;min-width:0;flex:1;min-height:0;text-align:left}
+.dishTop svg{flex-shrink:0}
+.dishTrace{position:relative;height:52px;flex-shrink:0;border:2px solid #BFD1C4;border-radius:12px;background:linear-gradient(transparent 48%,#E6EDE7 49%,#E6EDE7 51%,transparent 52%),#F8FBF8;overflow:hidden}
+.traceGuide{position:absolute;inset:0 8px;display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;color:#B4C1B8;font-family:var(--display);pointer-events:none}
+.traceCanvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
 
 /* 정리 */
 .sum{display:grid;grid-template-columns:360px 1fr 340px;gap:16px;margin-top:16px;flex:1;min-height:0}
@@ -335,7 +343,7 @@ const now=new Date();
 const T={y:now.getFullYear(),m:now.getMonth()+1,d:now.getDate(),w:now.getDay()};
 const dayKey='morning:day:'+T.y+'-'+T.m+'-'+T.d;
 const blankDay=()=>({att:{},mood:{},weather:null,feel:null,dateOk:{m:false,d:false},dayOk:false,pick:{},dishes:{}});
-let D=Object.assign(blankDay(),store.get(dayKey,{}));if(!D.pick)D.pick={};
+let D=Object.assign(blankDay(),store.get(dayKey,{}));if(!D.pick)D.pick={};if(!D.writing)D.writing={};
 function saveDay(){store.set(dayKey,D)}
 
 let steps=[],cur=0,sel=null,slotSel=null;
@@ -552,15 +560,14 @@ R.plan=m=>{
   const p=planToday();
   if(!p.length){m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘의 일과</h1></div></div><div class="rest">오늘은 ${WD[T.w]}요일, 학교 쉬는 날이에요</div><p class="sub" style="text-align:center">선생님 화면에서 요일별 시간표를 바꿀 수 있어요</p>`;lastSay=`오늘은 ${WD[T.w]}요일, 학교 쉬는 날이에요.`;return}
   let n=0;const items=p.map(s=>{const l=isLunch(s);if(!l)n++;return{ans:s,lunch:l,n}});
-  const pal=uniq(items.filter(x=>!x.lunch).map(x=>x.ans));
+  const pal=uniq([1,2,3,4,5].flatMap(w=>splitList(S.plan[w]).slice(0,9)).filter(x=>!isLunch(x)));
   const firstEmpty=()=>{const i=items.findIndex((x,i)=>!x.lunch&&!D.pick[i]);return i<0?null:i};
   if(slotSel===null||slotSel>=items.length||items[slotSel].lunch)slotSel=firstEmpty();
-  const pc=pal.length<=5?Math.max(1,pal.length):Math.ceil(pal.length/2);
-  const pr=Math.max(1,Math.ceil(pal.length/pc));
+  const pc=pal.length<=5?Math.max(1,pal.length):Math.min(5,Math.ceil(pal.length/3));
   m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘은 무엇을 배울까요?</h1></div><div class="say" id="say"></div><button class="mini-btn" id="clr">다시 하기</button></div>
     <div class="slots" id="slots"></div>
     <p class="palLab">${S.planCheck?'시간표를 보고 알맞은 과목을 눌러요':'하고 싶은 과목을 골라 넣어요'}</p>
-    <div class="pal" id="pal" style="grid-template-columns:repeat(${pc},1fr);grid-template-rows:repeat(${pr},1fr)">${pal.map((s,i)=>`<button class="choice" data-i="${i}">${subjIcon(s)}<span>${esc(s)}</span></button>`).join('')}</div>`;
+    <div class="pal" id="pal" style="grid-template-columns:repeat(${pc},1fr);grid-auto-rows:minmax(82px,1fr)">${pal.map((s,i)=>`<button class="choice" data-i="${i}">${subjIcon(s)}<span>${esc(s)}</span></button>`).join('')}</div>`;
   const drawSlots=()=>{
     $('#slots').innerHTML=items.map((x,i)=>{const v=x.lunch?x.ans:D.pick[i];
       return `<button class="slot ${x.lunch?'lunch':''} ${v&&!x.lunch?'full':''} ${i===slotSel?'sel':''}" data-i="${i}"><span class="n">${x.lunch?'점심':x.n+'교시'}</span><span class="ic ${v?'':'empty'}">${v?subjIcon(v):'?'}</span><span class="s">${v?esc(v):'&nbsp;'}</span></button>`}).join('');
@@ -585,20 +592,41 @@ R.plan=m=>{
 R.lunch=m=>{
   const ds=dishes(),n=Math.max(ds.length,1);
   const cols=n<=3?n:n<=6?3:4,rows=Math.ceil(n/cols);
-  const H=410,G=16,dh=Math.min(170,Math.floor((H-(rows-1)*G)/rows));
-  const ic=rows<=2?84:60,af=rows<=2?16:14;
-  const cw=(MAIN_W-(cols-1)*G)/cols,textW=cw-ic-14-52;
-  const nfOf=s=>Math.floor(Math.max(18,Math.min(rows<=2?40:30,textW/Math.max(s.length,1)*.94)));
+  const H=430,G=16,dh=Math.min(rows===1?330:rows===2?210:150,Math.floor((H-(rows-1)*G)/rows));
+  const traceH=rows===1?110:rows===2?86:58;
+  const ic=rows<=2?70:44,af=rows<=2?14:11;
+  const cw=(MAIN_W-(cols-1)*G)/cols,textW=cw-ic-52;
+  const nfOf=s=>Math.floor(Math.max(18,Math.min(rows<=2?34:27,textW/Math.max(s.length,1)*.94)));
+  const guideSize=s=>Math.floor(Math.max(18,Math.min(rows===1?64:rows===2?48:30,(cw-40)/Math.max(s.length,1))));
   const am=autoMeal();
   const src=am?`${esc(S.school.name)} 급식`:(S.sample?'지금은 예시 메뉴예요':'');
   const empty=!am?'선생님 화면에서 학교를 등록해 주세요.':
     {loading:'급식을 불러오고 있어요.',
      error:am.error||'학교 급식을 불러오지 못했어요. 잠시 후 다시 열어 주세요.',
      noday:'오늘은 학교 급식 정보가 없어요.'}[am.state]||'';
-  m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘 점심은 무엇일까요?</h1><p class="sub">음식을 누르면 읽어 줘요. 작은 글씨는 알레르기 재료예요${src?' · '+src:''}</p></div><div class="say" id="say"></div></div>
-    <div class="tray" id="tray" style="grid-template-columns:repeat(${cols},1fr);grid-auto-rows:${dh}px">${ds.map((x,i)=>`<button class="dish ${D.dishes[i]?'seen':''}" data-i="${i}">${dishIcon(i,ic)}<span class="tx"><b style="font-size:${nfOf(x.name)}px">${esc(x.name)}</b>${x.al.length?`<span class="al">${(rows<=2?x.al:x.al.slice(0,3)).map(k=>`<span style="font-size:${af}px">${k} ${ALLERGY[k]}</span>`).join('')}${rows>2&&x.al.length>3?`<span style="font-size:${af}px">외 ${x.al.length-3}</span>`:''}</span>`:''}</span></button>`).join('')||`<p class="rest" style="grid-column:1/-1;font-size:40px;margin-top:40px">${empty}</p>`}</div>`;
-  $('#tray').onclick=e=>{const b=e.target.closest('.dish');if(!b)return;const i=+b.dataset.i,x=ds[i];D.dishes[i]=1;saveDay();b.classList.add('seen');
+  m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘 점심은 무엇일까요?</h1><p class="sub">메뉴를 누르고, 흐린 글씨를 손가락이나 펜으로 따라 써요${src?' · '+src:''}</p></div><div class="say" id="say"></div><button class="mini-btn" id="clearWriting" ${ds.length?'':'hidden'}>쓴 글씨 지우기</button></div>
+    <div class="tray" id="tray" style="grid-template-columns:repeat(${cols},1fr);grid-auto-rows:${dh}px">${ds.map((x,i)=>`<div class="dish ${D.dishes[i]?'seen':''}"><button class="dishTop" data-i="${i}" aria-label="${esc(x.name)} 메뉴 확인">${dishIcon(i,ic)}<span class="tx"><b style="font-size:${nfOf(x.name)}px">${esc(x.name)}</b>${x.al.length?`<span class="al">${(rows<=2?x.al:x.al.slice(0,3)).map(k=>`<span style="font-size:${af}px">${k} ${ALLERGY[k]}</span>`).join('')}${rows>2&&x.al.length>3?`<span style="font-size:${af}px">외 ${x.al.length-3}</span>`:''}</span>`:''}</span></button><div class="dishTrace" style="height:${traceH}px"><span class="traceGuide" style="font-size:${guideSize(x.name)}px">${esc(x.name)}</span><canvas class="traceCanvas" data-i="${i}" aria-label="${esc(x.name)} 따라 쓰기"></canvas></div></div>`).join('')||`<p class="rest" style="grid-column:1/-1;font-size:40px;margin-top:40px">${empty}</p>`}</div>`;
+  $('#tray').onclick=e=>{const b=e.target.closest('.dishTop');if(!b)return;const i=+b.dataset.i,x=ds[i];D.dishes[i]=1;saveDay();b.closest('.dish').classList.add('seen');
     setSay($('#say'),ieyo(x.name));speak(ieyo(x.name)+'.');paintSteps()};
+  const renderInk=(canvas,paths)=>{
+    const ctx=canvas.getContext('2d'),dpr=window.devicePixelRatio||1;
+    ctx.clearRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#1E2944';ctx.fillStyle='#1E2944';ctx.lineWidth=4*dpr;ctx.lineCap='round';ctx.lineJoin='round';
+    paths.forEach(path=>{if(!path.length)return;if(path.length===1){ctx.beginPath();ctx.arc(path[0][0]*canvas.width,path[0][1]*canvas.height,2*dpr,0,Math.PI*2);ctx.fill();return}
+      ctx.beginPath();path.forEach(([x,y],i)=>i?ctx.lineTo(x*canvas.width,y*canvas.height):ctx.moveTo(x*canvas.width,y*canvas.height));ctx.stroke()})};
+  $('#tray').querySelectorAll('.traceCanvas').forEach(canvas=>{
+    const i=+canvas.dataset.i,name=ds[i].name,dpr=window.devicePixelRatio||1;
+    canvas.width=Math.round(canvas.clientWidth*dpr);canvas.height=Math.round(canvas.clientHeight*dpr);
+    const saved=D.writing[i];let paths=saved&&saved.name===name?saved.paths:[];renderInk(canvas,paths);
+    canvas.resetInk=()=>{paths=[];renderInk(canvas,paths)};
+    let active=null;
+    const addPoint=e=>{const rect=canvas.getBoundingClientRect(),p=[Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width)),Math.max(0,Math.min(1,(e.clientY-rect.top)/rect.height))];
+      const prev=active[active.length-1];if(!prev||Math.hypot(p[0]-prev[0],p[1]-prev[1])>.006){active.push(p);renderInk(canvas,paths)}};
+    canvas.onpointerdown=e=>{e.preventDefault();canvas.setPointerCapture(e.pointerId);active=[];paths.push(active);addPoint(e)};
+    canvas.onpointermove=e=>{if(active){e.preventDefault();addPoint(e)}};
+    const finish=()=>{if(!active)return;D.writing[i]={name,paths};saveDay();active=null};
+    canvas.onpointerup=finish;canvas.onpointercancel=finish;
+  });
+  $('#clearWriting').onclick=()=>{D.writing={};saveDay();$('#tray').querySelectorAll('.traceCanvas').forEach(c=>c.resetInk());setSay($('#say'),'다시 따라 써요')};
   lastSay='오늘 점심은 '+ds.map(x=>x.name).join(', ')+(ds.length?'이에요.':'');
 };
 R.sum=m=>{
@@ -659,7 +687,7 @@ $('#tBtn').onclick=()=>{
         <button class="schedOpen" id="editSchedule" type="button">시간표 표로 입력하기</button>
         <small id="schedSummary">1교시부터 최대 9교시까지 입력할 수 있어요.</small>
         ${[1,2,3,4,5].map(w=>`<input type="hidden" id="sP${w}" value="${esc(S.plan[w]||'')}">`).join('')}</div>
-      <div class="f"><span class="lab">학생이 고를 과목 카드</span><small>오늘 시간표의 과목으로 자동으로 만들어요. 점심과 같은 과목의 중복은 빼요.</small></div>
+      <div class="f"><span class="lab">학생이 고를 과목 카드</span><small>월요일부터 금요일까지 시간표에 있는 과목을 모두 보여줘요. 점심과 같은 과목의 중복은 빼요.</small></div>
       <div class="f"><span class="lab">일과 고르기 방법</span><div class="checks one"><label><input type="checkbox" id="sCheck" ${S.planCheck?'checked':''}>시간표와 맞는지 확인하기 (끄면 자유롭게 넣어요)</label></div></div>
     </div>
     <div>
@@ -751,7 +779,7 @@ $('#tBtn').onclick=()=>{
     const lunch=$('#sLunch').value.trim();
     const mealMode=$('#sMealAuto').checked?'auto':'manual';
     const mealChanged=lunch!==S.lunch||mealMode!==S.mealMode||(chosen&&chosen.code)!==(S.school&&S.school.code);
-    if(planChanged)D.pick={};if(mealChanged)D.dishes={};saveDay();
+    if(planChanged)D.pick={};if(mealChanged){D.dishes={};D.writing={}};saveDay();
     S=Object.assign(S,{cls:$('#sCls').value.trim()||'우리 반',kids:kids.length?kids:['학생'],plan,
       planCheck:$('#sCheck').checked,lunch,steps:st,sample:S.sample&&lunch===DEFAULTS.lunch,mealMode,school:chosen||null,
 });
