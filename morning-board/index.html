@@ -314,7 +314,6 @@ const DEFAULTS={
         3:'국어, 체육, 수학, 과학, 점심, 생활, 생활',
         4:'진로와 직업, 진로와 직업, 국어, 음악, 점심, 수학, 체육',
         5:'수학, 국어, 미술, 미술, 점심, 창체'},
-  subjects:'국어, 수학, 사회, 과학, 진로와 직업, 체육, 음악, 미술, 생활, 창체',
   planCheck:true,
   lunch:'',
   mealMode:'auto',
@@ -324,7 +323,7 @@ const DEFAULTS={
 };
 let S=Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),store.get('morning:settings',{}));
 S.steps=Object.assign({},DEFAULTS.steps,S.steps||{});S.steps.sum=true;
-if(!S.subjects)S.subjects=DEFAULTS.subjects;if(S.planCheck===undefined)S.planCheck=true;
+delete S.subjects;if(S.planCheck===undefined)S.planCheck=true;
 
 const shared=new URLSearchParams(location.search);
 if(/^\d{7,10}$/.test(shared.get('school')||'')&&/^[A-Z][0-9]{2}$/.test(shared.get('office')||'')){
@@ -553,11 +552,11 @@ R.plan=m=>{
   const p=planToday();
   if(!p.length){m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘의 일과</h1></div></div><div class="rest">오늘은 ${WD[T.w]}요일, 학교 쉬는 날이에요</div><p class="sub" style="text-align:center">선생님 화면에서 요일별 시간표를 바꿀 수 있어요</p>`;lastSay=`오늘은 ${WD[T.w]}요일, 학교 쉬는 날이에요.`;return}
   let n=0;const items=p.map(s=>{const l=isLunch(s);if(!l)n++;return{ans:s,lunch:l,n}});
-  const pal=uniq(splitList(S.subjects).concat(S.planCheck?items.filter(x=>!x.lunch).map(x=>x.ans):[])).filter(s=>!isLunch(s)).slice(0,12);
+  const pal=uniq(items.filter(x=>!x.lunch).map(x=>x.ans));
   const firstEmpty=()=>{const i=items.findIndex((x,i)=>!x.lunch&&!D.pick[i]);return i<0?null:i};
   if(slotSel===null||slotSel>=items.length||items[slotSel].lunch)slotSel=firstEmpty();
-  const pc=pal.length<=5?pal.length:pal.length<=10?Math.ceil(pal.length/2):Math.ceil(pal.length/2);
-  const pr=Math.ceil(pal.length/pc);
+  const pc=pal.length<=5?Math.max(1,pal.length):Math.ceil(pal.length/2);
+  const pr=Math.max(1,Math.ceil(pal.length/pc));
   m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘은 무엇을 배울까요?</h1></div><div class="say" id="say"></div><button class="mini-btn" id="clr">다시 하기</button></div>
     <div class="slots" id="slots"></div>
     <p class="palLab">${S.planCheck?'시간표를 보고 알맞은 과목을 눌러요':'하고 싶은 과목을 골라 넣어요'}</p>
@@ -660,7 +659,7 @@ $('#tBtn').onclick=()=>{
         <button class="schedOpen" id="editSchedule" type="button">시간표 표로 입력하기</button>
         <small id="schedSummary">1교시부터 최대 9교시까지 입력할 수 있어요.</small>
         ${[1,2,3,4,5].map(w=>`<input type="hidden" id="sP${w}" value="${esc(S.plan[w]||'')}">`).join('')}</div>
-      <div class="f"><label for="sSub">학생이 고를 과목 카드</label><small>쉼표로 나눠 써요(최대 12개). 시간표에 있는 과목은 자동으로 더해져요</small><input type="text" id="sSub" value="${esc(S.subjects)}"></div>
+      <div class="f"><span class="lab">학생이 고를 과목 카드</span><small>오늘 시간표의 과목으로 자동으로 만들어요. 점심과 같은 과목의 중복은 빼요.</small></div>
       <div class="f"><span class="lab">일과 고르기 방법</span><div class="checks one"><label><input type="checkbox" id="sCheck" ${S.planCheck?'checked':''}>시간표와 맞는지 확인하기 (끄면 자유롭게 넣어요)</label></div></div>
     </div>
     <div>
@@ -680,7 +679,7 @@ $('#tBtn').onclick=()=>{
   $('#editSchedule').onclick=()=>{
     const days=[1,2,3,4,5];
     const values=Object.fromEntries(days.map(w=>[w,splitList($('#sP'+w).value).slice(0,9)]));
-    const subjects=uniq([...splitList($('#sSub').value),...days.flatMap(w=>values[w]),'점심']);
+    const subjects=uniq([...days.flatMap(w=>values[w]),'점심']);
     const overlay=document.createElement('div');overlay.className='schedOverlay';
     overlay.innerHTML=`<div class="schedPanel" role="dialog" aria-modal="true" aria-label="요일별 시간표 입력">
       <header><h2>요일별 시간표</h2><button id="scheduleCancel" type="button">닫기</button></header>
@@ -753,7 +752,7 @@ $('#tBtn').onclick=()=>{
     const mealMode=$('#sMealAuto').checked?'auto':'manual';
     const mealChanged=lunch!==S.lunch||mealMode!==S.mealMode||(chosen&&chosen.code)!==(S.school&&S.school.code);
     if(planChanged)D.pick={};if(mealChanged)D.dishes={};saveDay();
-    S=Object.assign(S,{cls:$('#sCls').value.trim()||'우리 반',kids:kids.length?kids:['학생'],plan,subjects:$('#sSub').value.trim()||DEFAULTS.subjects,
+    S=Object.assign(S,{cls:$('#sCls').value.trim()||'우리 반',kids:kids.length?kids:['학생'],plan,
       planCheck:$('#sCheck').checked,lunch,steps:st,sample:S.sample&&lunch===DEFAULTS.lunch,mealMode,school:chosen||null,
 });
     store.set('morning:settings',S);close();applyS();loadMeal();
