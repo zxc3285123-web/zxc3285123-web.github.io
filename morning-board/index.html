@@ -193,8 +193,17 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 .big h3{color:#AFC0DA}
 .big p{font-size:56px}
 .big p.cheer{font-family:var(--display);font-size:34px;color:var(--sun);line-height:1.2}
-.mid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto 1fr;gap:16px;min-height:0}
+.mid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:100px minmax(0,1fr) 106px;gap:16px;min-height:0}
 .mid .wide{grid-column:span 2}
+.todayLessons{display:flex;flex-direction:column}
+.todayLessons h3{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.todayLessons h3 small{font-size:16px;font-weight:700;color:var(--leaf);letter-spacing:0}
+.lessonList{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(43px,1fr);gap:7px;flex:1;min-height:0;overflow:auto}
+.lesson{display:flex;align-items:center;gap:8px;min-width:0;padding:4px 9px;border-radius:13px;background:var(--paper);font-family:var(--display);font-size:23px;line-height:1.1}
+.lesson.chosen{background:var(--leaf-soft);box-shadow:inset 0 0 0 2px var(--leaf)}
+.lesson b{font-family:var(--body);font-size:16px;white-space:nowrap}
+.lesson span{min-width:0;overflow-wrap:anywhere}
+.lesson em{margin-left:auto;color:var(--leaf);font-style:normal;font-size:22px}
 .wx{display:flex;align-items:center;gap:8px}
 .wx svg{width:56px;height:56px;flex-shrink:0}
 .mlist{display:flex;flex-direction:column;gap:8px;margin-top:4px}
@@ -647,7 +656,8 @@ R.lunch=m=>{
 };
 R.sum=m=>{
   const a=S.kids.filter(k=>D.att[k]==='in').length,ds=dishes();
-  const items=planToday();const learned=uniq(items.map((s,i)=>isLunch(s)?null:(D.pick[i]||s)).filter(Boolean));
+  let period=0;
+  const learned=planToday().map((s,i)=>{if(isLunch(s))return null;period++;return{period,subject:D.pick[i]||s,chosen:!!D.pick[i]}}).filter(Boolean);
   const w=WEATHER.find(x=>x.k===D.weather),f=FEEL.find(x=>x.k===D.feel);
   const groups=MOODS.map(md=>({md,ks:S.kids.filter(k=>D.mood[k]===md.k)})).filter(g=>g.ks.length);
   m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘 아침을 정리해요</h1></div></div>
@@ -657,7 +667,7 @@ R.sum=m=>{
       <div class="mid">
         <div class="box"><h3>날씨</h3><p class="wx">${w?wIcon(w.k)+`<span>${w.n}${f?' · '+f.t:''}</span>`:'아직 안 골랐어요'}</p></div>
         <div class="box"><h3>출석</h3><p>${a}명 / ${S.kids.length}명</p></div>
-        <div class="box wide"><h3>오늘 배워요</h3><p class="two" style="font-size:${learned.join('').length>24?24:28}px">${learned.length?learned.map(esc).join(' · '):'쉬는 날'}</p></div>
+        <div class="box wide todayLessons"><h3>오늘 배워요 <small>✓ 일과에서 고른 과목</small></h3><div class="lessonList">${learned.length?learned.map(x=>`<div class="lesson ${x.chosen?'chosen':''}"><b>${x.period}교시</b><span>${esc(x.subject)}</span>${x.chosen?'<em aria-label="골랐어요">✓</em>':''}</div>`).join(''):'쉬는 날'}</div></div>
         <div class="box wide"><h3>점심</h3><p class="two">${ds.length?ds.slice(0,4).map(x=>esc(x.name)).join(' · ')+(ds.length>4?` <span style="color:var(--muted)">외 ${ds.length-4}가지</span>`:''):'없음'}</p></div>
       </div>
       <div class="box"><h3>우리 반 기분</h3>${groups.length?`<div class="mlist">${groups.map(g=>`<div>${face(g.md.k)}<span class="mt"><span>${g.md.t} ${g.ks.length}명</span><small>${g.ks.map(esc).join(', ')}</small></span></div>`).join('')}</div>`:'<p style="font-size:28px">아직 안 골랐어요</p>'}</div>
