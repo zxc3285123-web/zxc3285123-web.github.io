@@ -41,12 +41,13 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:4px soli
 .brand b{font-family:var(--display);font-size:34px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .brand span{font-size:16px;color:var(--muted);font-weight:500}
 .today{flex:1;min-width:0;font-size:20px;color:var(--muted);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.today b{font-family:var(--display);font-weight:400;font-size:30px;color:var(--ink);margin-right:12px}
+.step-badge{display:inline-flex;align-items:center;gap:12px;padding:6px 18px 6px 7px;border:2px solid #F6CEB5;border-radius:22px;background:#FFF3E9;font-family:var(--display);font-size:30px;color:var(--ink)}
+.step-count{width:42px;height:42px;display:grid;place-items:center;border-radius:50%;background:var(--accent);color:#fff;font-size:25px}
 .clock{font-family:var(--display);font-size:40px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .tools{display:flex;gap:8px}
 .tool{height:52px;padding:0 16px;border-radius:14px;background:var(--paper);font-size:18px;font-weight:700;display:flex;align-items:center;gap:6px;white-space:nowrap}
 .tool.listen{background:var(--leaf-soft);color:var(--leaf)}
-.tool[aria-pressed="false"]{color:var(--muted);text-decoration:line-through}
+.tool.home{background:var(--ink);color:#fff}
 
 /* 가운데 */
 main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direction:column;min-height:0}
@@ -79,7 +80,16 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 .dateQ{display:flex;flex-direction:column;gap:24px}
 .row3{display:flex;gap:24px}
 .row3 .choice{width:230px;height:170px;font-size:76px}
-.qtag{display:inline-block;font-size:22px;font-weight:700;background:var(--accent-soft);color:var(--accent);padding:4px 14px;border-radius:12px;margin-bottom:10px}
+.qtag{display:inline-block;font-size:22px;font-weight:700;background:var(--accent-soft);color:#AE4D1F;padding:6px 16px;border-radius:14px;margin-bottom:14px}
+.dateWrap{grid-template-columns:400px 1fr;gap:42px}
+.dateWrap .ilryeok{border:3px solid #E5D9DC;border-radius:30px;box-shadow:0 12px 0 #D5DED6}
+.dateWrap .ilryeok .head{background:linear-gradient(120deg,#DE4870,#F2746B)}
+.dateWrap .ilryeok .wd{color:var(--leaf)}
+.dateQ{gap:26px;padding:34px 36px;background:#fff;border:3px solid #DCE6DD;border-radius:30px;box-shadow:0 10px 0 #D5DED6}
+.dateQ .q{font-size:52px}
+.dateQ .row3{gap:16px}
+.dateQ .row3 .choice{flex:1;min-width:0;width:auto;height:154px;font-size:68px;border-radius:24px}
+.dateQ .say{min-height:50px}
 
 /* 요일 */
 .week{display:grid;grid-template-columns:repeat(7,1fr);gap:18px;margin-top:28px}
@@ -244,6 +254,7 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
     <div class="today" id="hint"></div>
     <div class="clock" id="clock">9:00</div>
     <div class="tools">
+      <button class="tool home" id="homeBtn">처음으로</button>
       <button class="tool" id="fsBtn">전체 화면</button>
       <button class="tool" id="shareBtn">공유</button>
       <button class="tool" id="tBtn">선생님</button>
@@ -596,10 +607,11 @@ function isDone(id){const p=planToday(),ds=dishes(),here=S.kids.filter(k=>D.att[
 function paintSteps(){$('#steps').innerHTML=steps.map((s,i)=>{const d=isDone(s.id)&&i!==cur;return `${i?'<span class="sep"></span>':''}<button class="chip ${i===cur?'now':''} ${d?'done':''}" data-i="${i}" ${i===cur?'aria-current="step"':''}><i>${d?'✓':i+1}</i>${s.label}</button>`}).join('')}
 function go(i,talk){cur=Math.max(0,Math.min(steps.length-1,i));const m=$('#main');m.innerHTML='';R[steps[cur].id](m);paintSteps();
   $('#prev').disabled=cur===0;$('#next').disabled=cur===steps.length-1;
-  $('#hint').innerHTML=`<b>${cur+1}. ${steps[cur].label}</b>${cur<steps.length-1?'다음은 '+steps[cur+1].label:'아침 열기 마지막'}`;
+  $('#hint').innerHTML=`<span class="step-badge"><span class="step-count">${cur+1}</span>${steps[cur].label}</span>`;
 }
 $('#steps').onclick=e=>{const b=e.target.closest('.chip');if(b)go(+b.dataset.i)};
 $('#prev').onclick=()=>go(cur-1);$('#next').onclick=()=>go(cur+1);
+$('#homeBtn').onclick=()=>go(0,false);
 document.addEventListener('keydown',e=>{if(!$('#sheet').hidden||/INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='ArrowRight'||e.key==='PageDown')go(cur+1);if(e.key==='ArrowLeft'||e.key==='PageUp')go(cur-1)});
 $('#fsBtn').onclick=()=>{try{const p=document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();p&&p.catch&&p.catch(()=>toast('이 화면에서는 전체 화면을 쓸 수 없어요'))}catch(e){toast('이 화면에서는 전체 화면을 쓸 수 없어요')}};
 
