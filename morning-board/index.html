@@ -244,8 +244,6 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
     <div class="today" id="hint"></div>
     <div class="clock" id="clock">9:00</div>
     <div class="tools">
-      <button class="tool listen" id="again"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 010 7M18.5 6a8.5 8.5 0 010 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>다시 듣기</button>
-      <button class="tool" id="sndBtn" aria-pressed="true">소리</button>
       <button class="tool" id="fsBtn">전체 화면</button>
       <button class="tool" id="shareBtn">공유</button>
       <button class="tool" id="tBtn">선생님</button>
@@ -286,7 +284,6 @@ const DEFAULTS={
   subjects:'국어, 수학, 사회, 과학, 진로와 직업, 체육, 음악, 미술, 생활, 창체',
   planCheck:true,
   lunch:'',
-  speech:true,
   mealMode:'auto',
   school:null,
   steps:{date:true,day:true,weather:true,att:true,mood:true,plan:true,lunch:true,sum:true},
@@ -309,18 +306,12 @@ const blankDay=()=>({att:{},mood:{},weather:null,feel:null,dateOk:{m:false,d:fal
 let D=Object.assign(blankDay(),store.get(dayKey,{}));if(!D.pick)D.pick={};
 function saveDay(){store.set(dayKey,D)}
 
-let steps=[],cur=0,sel=null,slotSel=null,sound=true;
+let steps=[],cur=0,sel=null,slotSel=null;
 function buildSteps(){steps=STEP_DEF.filter(s=>S.steps[s.id]);if(cur>=steps.length)cur=steps.length-1}
 
-/* ---------- 소리 ---------- */
-let ac=null;
-function tone(ok){ if(!sound)return; try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();
-  const notes=ok?[659,880]:[330];notes.forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=f;
-  const t=ac.currentTime+i*.12;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.25,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.35);
-  o.connect(g).connect(ac.destination);o.start(t);o.stop(t+.4)})}catch(e){} }
 let lastSay='';
-function speak(t){ lastSay=t; if(!sound||!S.speech)return; try{const u=new SpeechSynthesisUtterance(t);u.lang='ko-KR';u.rate=.9;
-  const v=speechSynthesis.getVoices().find(v=>/ko/i.test(v.lang));if(v)u.voice=v;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){} }
+function tone(){}
+function speak(){}
 
 /* ---------- 그림 ---------- */
 function wIcon(k){
@@ -606,12 +597,10 @@ function paintSteps(){$('#steps').innerHTML=steps.map((s,i)=>{const d=isDone(s.i
 function go(i,talk){cur=Math.max(0,Math.min(steps.length-1,i));const m=$('#main');m.innerHTML='';R[steps[cur].id](m);paintSteps();
   $('#prev').disabled=cur===0;$('#next').disabled=cur===steps.length-1;
   $('#hint').innerHTML=`<b>${cur+1}. ${steps[cur].label}</b>${cur<steps.length-1?'다음은 '+steps[cur+1].label:'아침 열기 마지막'}`;
-  if(talk!==false)setTimeout(()=>speak(lastSay),150)}
+}
 $('#steps').onclick=e=>{const b=e.target.closest('.chip');if(b)go(+b.dataset.i)};
 $('#prev').onclick=()=>go(cur-1);$('#next').onclick=()=>go(cur+1);
-$('#again').onclick=()=>{if(!sound){sound=true;$('#sndBtn').setAttribute('aria-pressed','true')}speak(lastSay)};
 document.addEventListener('keydown',e=>{if(!$('#sheet').hidden||/INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='ArrowRight'||e.key==='PageDown')go(cur+1);if(e.key==='ArrowLeft'||e.key==='PageUp')go(cur-1)});
-$('#sndBtn').onclick=()=>{sound=!sound;$('#sndBtn').setAttribute('aria-pressed',String(sound));if(!sound)try{speechSynthesis.cancel()}catch(e){}};
 $('#fsBtn').onclick=()=>{try{const p=document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();p&&p.catch&&p.catch(()=>toast('이 화면에서는 전체 화면을 쓸 수 없어요'))}catch(e){toast('이 화면에서는 전체 화면을 쓸 수 없어요')}};
 
 /* ---------- 선생님 ---------- */
@@ -630,7 +619,7 @@ $('#tBtn').onclick=()=>{
     <div>
       <div class="f"><label for="sCls">반 이름</label><input type="text" id="sCls" maxlength="12" value="${esc(S.cls)}"></div>
       <div class="f"><label for="sKids">학생 이름</label><small>한 줄에 한 명 · 최대 18명</small><textarea id="sKids" style="min-height:190px">${esc(S.kids.join('\n'))}</textarea></div>
-      <div class="f"><span class="lab">할 활동</span><div class="checks">${STEP_DEF.filter(s=>s.id!=='sum').map(s=>`<label><input type="checkbox" id="sS_${s.id}" ${S.steps[s.id]?'checked':''}>${s.label}</label>`).join('')}<label><input type="checkbox" id="sSpeech" ${S.speech?'checked':''}>읽어 주기</label></div></div>
+      <div class="f"><span class="lab">할 활동</span><div class="checks">${STEP_DEF.filter(s=>s.id!=='sum').map(s=>`<label><input type="checkbox" id="sS_${s.id}" ${S.steps[s.id]?'checked':''}>${s.label}</label>`).join('')}</div></div>
     </div>
     <div>
       <div class="f"><span class="lab">요일별 시간표</span><small>쉼표로 나눠 써요(최대 9칸). ‘점심’을 넣으면 점심시간 칸이 돼요</small>
@@ -681,7 +670,7 @@ $('#tBtn').onclick=()=>{
     const mealChanged=lunch!==S.lunch||mealMode!==S.mealMode||(chosen&&chosen.code)!==(S.school&&S.school.code);
     if(planChanged)D.pick={};if(mealChanged)D.dishes={};saveDay();
     S=Object.assign(S,{cls:$('#sCls').value.trim()||'우리 반',kids:kids.length?kids:['학생'],plan,subjects:$('#sSub').value.trim()||DEFAULTS.subjects,
-      planCheck:$('#sCheck').checked,lunch,speech:$('#sSpeech').checked,steps:st,sample:S.sample&&lunch===DEFAULTS.lunch,mealMode,school:chosen||null,
+      planCheck:$('#sCheck').checked,lunch,steps:st,sample:S.sample&&lunch===DEFAULTS.lunch,mealMode,school:chosen||null,
 });
     store.set('morning:settings',S);close();applyS();loadMeal();
     toast(mealMode==='auto'&&!chosen?'저장했어요. 학교를 고르면 급식이 나와요':'저장했어요')};
@@ -697,7 +686,6 @@ function fit(){const f=$('#fit'),w=f.clientWidth,h=f.clientHeight;if(!w||!h)retu
 addEventListener('resize',fit);
 function tick(){const d=new Date(),h=d.getHours(),m=d.getMinutes();$('#clock').textContent=(h<12?'오전 ':'오후 ')+(h%12||12)+':'+String(m).padStart(2,'0')}
 setInterval(()=>{tick();const d=new Date();if(d.getFullYear()!==T.y||d.getMonth()+1!==T.m||d.getDate()!==T.d)location.reload()},10000);tick();
-try{speechSynthesis.getVoices()}catch(e){}
 setCls();buildSteps();fit();go(0,false);
 loadMeal();
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(steps[cur])go(cur,false)});
