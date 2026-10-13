@@ -132,3 +132,22 @@ td.num{font-family:var(--font-num); font-variant-numeric:tabular-nums}
 .foot-links a:hover{color:var(--accent-deep); background:var(--surface)}
 .foot-copy{flex-basis:100%; font-size:12px; color:var(--muted); margin:0}
 @media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+
+/* 품목별 페이지 */
+.sigs{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:4px 0 18px}
+.sig{background:var(--cbg); border:1.5px solid var(--cl); border-radius:var(--r-lg); padding:16px 18px;
+  display:flex; align-items:center; gap:12px}
+.sig-l{font-family:var(--font-display); font-size:16px; color:var(--ink)}
+.sig-m{font-family:var(--font-num); font-size:34px; line-height:1; color:var(--c); margin-left:auto}
+.sig-w{font-size:13px; font-weight:700; color:var(--c); min-width:3.2em; text-align:right}
+.chips{display:flex; flex-wrap:wrap; gap:6px}
+.chip{font-size:12.5px; background:var(--surface); border:1.5px solid var(--line); border-radius:var(--r-pill);
+  padding:3px 11px; color:var(--muted)}
+.rels{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:8px}
+.rel{display:flex; align-items:center; gap:9px; background:var(--surface); border:1.5px solid var(--line);
+  border-radius:var(--r-md); padding:9px 13px; text-decoration:none; color:var(--ink); transition:border-color .15s}
+.rel:hover{border-color:var(--accent)}
+.rel b{font-weight:500; font-size:14px; flex:1; min-width:0}
+.rel em{font-style:normal; display:flex; gap:5px}
+.rel em .mk{font-size:13.5px}
+@media (max-width:520px){ .sig{padding:13px 14px} .sig-m{font-size:28px} }

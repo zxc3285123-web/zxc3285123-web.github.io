@@ -44,7 +44,7 @@ def nav_html(cur, depth):
         out.append(f'<a {a}href="{up}{href}">{label}</a>')
     return "\n        ".join(out)
 
-def page(*, path, title, desc, body, cur=None, depth=0, head_extra="", body_class=""):
+def page(*, path, title, desc, body, cur=None, depth=0, head_extra="", body_class="", robots=None):
     up = "../" * depth
     cur = cur or path
     canon = SITE_URL + "/" + (path[:-len("index.html")] if path.endswith("index.html") else path)
@@ -59,7 +59,7 @@ def page(*, path, title, desc, body, cur=None, depth=0, head_extra="", body_clas
 <meta property="og:title" content="{title}">
 <meta property="og:description" content="{desc}">
 <meta property="og:site_name" content="{SITE_NAME}">
-<meta name="robots" content="index, follow">
+<meta name="robots" content="{robots or 'index, follow'}">
 <link rel="canonical" href="{canon}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -122,6 +122,9 @@ from _items import ITEMS, CATS
 from _airlines import AIRLINES
 import _posts1, _posts2, _posts3, _posts4, _posts5, _posts6, _posts7, _posts8
 import _dest
+from _slugs import SLUGS
+import _itempages
+from _more import MORE
 DCOUNTRIES, DREGIONS, DGROUPS, DRULES = _dest.COUNTRIES, _dest.REGIONS, _dest.GROUPS, _dest.RULES
 ALL_POSTS = {}
 for mod in (_posts1, _posts2, _posts3, _posts4, _posts5, _posts6, _posts7, _posts8):
@@ -193,8 +196,13 @@ page(path="guide/index.html", cur="guide/index.html", depth=1,
 # ── 홈 ──────────────────────────────────────
 QUICK = ["보조배터리","라이터","향수","김치","가위","드론","전자담배","화장품",
          "손톱깎이","고데기","우산","약"]
+QUICK_ITEM = {"전자담배": "전자담배 · 액상"}   # 버튼 이름 → 품목 페이지가 있는 정확한 품목명
+def _quick_href(q):
+    n = QUICK_ITEM.get(q, q)
+    return f"item/{SLUGS[n]}.html" if n in SLUGS else f"tool.html?q={q}"
 quick_html = " ".join(
-    f'<a class="btn ghost" href="tool.html?q={q}">{q}</a>' for q in QUICK)
+    f'<a class="btn ghost" href="{_quick_href(q)}">{q}</a>' for q in QUICK) + \
+    f' <a class="btn" href="item/index.html">품목 {len(ITEMS)}개 전체 보기 →</a>'
 
 PRINCIPLES = [
     ("배터리가 분리되는 것", "기내만", "cabin",
@@ -503,7 +511,7 @@ _rows = []
 for it in ITEMS:
     parts = [f'n:{_js(it["n"])}', f'e:{_js(it["e"])}', f'c:{_js(it["c"])}',
              f'v:{_js(it["v"])}', f'ox:{_js(it["ox"])}', f'k:{_js(it.get("k",""))}',
-             f'd:{_js(it["d"])}']
+             f'd:{_js(it["d"])}', f'u:{_js(SLUGS.get(it["n"], ""))}']
     if it.get("calc"): parts.append(f'calc:{_js(it["calc"])}')
     if it.get("dom"):
         dm = it["dom"]
@@ -557,6 +565,7 @@ def _static_items():
     out = ['<section class="wrap" id="all-items" style="margin-top:44px">',
            '<article class="post" style="max-width:none">',
            f'<h2>전체 품목 {len(ITEMS)}개 한눈에 보기</h2>',
+           f'<p>품목 이름을 누르면 이유·국내선 예외·나라별 기준까지 담은 <a href="item/index.html">품목별 페이지</a>로 이동합니다.</p>',
            '<p>위 검색창을 쓰지 않고 분류별로 훑어보고 싶을 때를 위한 전체 목록입니다. '
            '<strong>기내</strong>와 <strong>위탁</strong> 칸의 기호는 '
            '<span class="mk o">○</span> 가능 · <span class="mk t">△</span> 조건부 · '
@@ -573,7 +582,7 @@ def _static_items():
         for it in rows:
             ox = it["ox"]
             out.append(
-                f'<tr><td>{it["e"]} {_html.escape(it["n"])}</td>'
+                f'<tr><td>{it["e"]} <a href="item/{SLUGS[it["n"]]}.html">{_html.escape(it["n"])}</a></td>'
                 f'<td class="num"><span class="mk {MKCLS[ox[0]]}">{ox[0]}</span></td>'
                 f'<td class="num"><span class="mk {MKCLS[ox[1]]}">{ox[1]}</span></td>'
                 f'<td><strong>{VLABEL[it["v"]]}</strong> — {it["d"]}</td></tr>')
@@ -602,7 +611,7 @@ def _static_io():
             io = it["io"]
             lab, col = IOL.get(io.get("inv", ""), ("—", "var(--muted)"))
             out.append(
-                f'<tr><td>{it["e"]} {_html.escape(it["n"])}</td>'
+                f'<tr><td>{it["e"]} <a href="item/{SLUGS[it["n"]]}.html">{_html.escape(it["n"])}</a></td>'
                 f'<td style="font-size:12.8px;color:var(--muted)">{io.get("out", "—")}</td>'
                 f'<td style="font-size:12.5px;font-weight:700;color:{col}">{lab}</td>'
                 f'<td style="font-size:12.8px;color:var(--muted)">{io.get("ind", "—")}</td></tr>')
@@ -719,9 +728,16 @@ page(path="country.html", cur="country.html", depth=0,
 물건을 검색할 때마다 기내·위탁 판정과 그 나라 반입 기준이 함께 나옵니다.</p>
 </article></section>""")
 
+# ── 품목별 페이지 (item/) ─────────────────────
+ITEM_PAGES, ITEM_INDEXABLE, ITEM_URL = _itempages.build(
+    ITEMS=ITEMS, CATS=CATS, SLUGS=SLUGS, DGROUPS=DGROUPS, DCOUNTRIES=DCOUNTRIES, DRULES=DRULES,
+    GORDER=_dest.GORDER, GNAMES=_dest.GNAMES, POSTS_BY_KEY=ALL_POSTS, page=page, AD=AD,
+    SITE_NAME=SITE_NAME, SITE_URL=SITE_URL, MORE=MORE)
+print(f"품목 페이지 {len(ITEM_PAGES)}장 (검색 노출 {len(ITEM_INDEXABLE)}장)")
+
 # ── robots · sitemap · ads.txt ───────────────
 PAGES_FOR_SITEMAP = ["index.html", "tool.html", "country.html", "guide/index.html", "about.html",
-                     "contact.html", "privacy.html", "terms.html"] + [p["slug"] for p in POSTS]
+                     "contact.html", "privacy.html", "terms.html"] + [p["slug"] for p in POSTS] + ITEM_INDEXABLE
 
 (ROOT / "robots.txt").write_text(
 f"""User-agent: *

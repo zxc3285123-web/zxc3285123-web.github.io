@@ -296,6 +296,7 @@
           '<span class="oxpill" style="--mc:' + MARK_COLOR[ox[1]] + '">위탁 <b class="m">' + ox[1] + '</b></span>' +
         '</div>' +
         '<p class="desc">' + r.d + '</p>' +
+        (it.u ? '<a class="more" href="item/' + it.u + '.html">이유 · 나라별 기준 자세히 →</a>' : '') +
         (io ? '<div class="io" style="' + ioStyle(io.key) + '"><b class="t">' + io.title + '</b>' +
               (io.badge ? '<span class="verdict-io">' + io.badge + '</span>' : '') + io.text + '</div>' : '');
       if (r.calc) card.appendChild(makeCalc(it, r.v));
