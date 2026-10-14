@@ -136,7 +136,7 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 .mk .tx{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
 .mk .nm{font-family:var(--display);white-space:nowrap;line-height:1.1}
 .mk .mw{font-weight:700;color:var(--muted);white-space:nowrap}
-.mFaces{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:18px;height:130px;flex-shrink:0}
+.mFaces{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;margin-top:18px;height:130px;flex-shrink:0}
 .mFaces .choice{border-radius:22px;align-content:center;gap:2px;font-size:28px;white-space:nowrap}
 .mFaces svg{width:76px;height:76px}
 .mFaces.off .choice{opacity:.4;pointer-events:none}
@@ -445,17 +445,19 @@ function wIcon(k){
   };return `<svg viewBox="0 0 100 100" aria-hidden="true">${map[k]}</svg>`;}
 const MOODS=[
   {k:'joy',t:'기뻐요',c:'#FFC63A'},{k:'fun',t:'신나요',c:'#F2732B'},{k:'calm',t:'편안해요',c:'#7FCFA0'},
+  {k:'neutral',t:'보통이에요',c:'#BCCCD4'},
   {k:'sleepy',t:'졸려요',c:'#B7A7E8'},{k:'sad',t:'슬퍼요',c:'#7FB4EA'},{k:'mad',t:'화나요',c:'#E8607E'}];
 function face(k){
   const m=MOODS.find(x=>x.k===k);if(!m)return'';const ink='#1E2944';
   const eyes={joy:`<path d="M32 42q6-8 12 0M56 42q6-8 12 0" stroke="${ink}" stroke-width="5" fill="none" stroke-linecap="round"/>`,
     fun:`<path d="M30 44l8-8 8 8M54 44l8-8 8 8" stroke="${ink}" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
     calm:`<path d="M31 42h13M56 42h13" stroke="${ink}" stroke-width="5" stroke-linecap="round"/>`,
+    neutral:`<circle cx="38" cy="42" r="5" fill="${ink}"/><circle cx="62" cy="42" r="5" fill="${ink}"/>`,
     sleepy:`<path d="M31 44q6 5 12 0M57 44q6 5 12 0" stroke="${ink}" stroke-width="5" fill="none" stroke-linecap="round"/>`,
     sad:`<circle cx="38" cy="42" r="5" fill="${ink}"/><circle cx="62" cy="42" r="5" fill="${ink}"/><path d="M68 50q4 8 0 11q-4-3 0-11" fill="#3F8FDE"/>`,
     mad:`<path d="M30 34l14 6M70 34l-14 6" stroke="${ink}" stroke-width="5" stroke-linecap="round"/><circle cx="38" cy="45" r="5" fill="${ink}"/><circle cx="62" cy="45" r="5" fill="${ink}"/>`}[k];
   const mouth={joy:'<path d="M34 60q16 16 32 0" stroke-width="5"/>',fun:'<path d="M32 58h36q-4 18-18 18t-18-18z" fill="#1E2944"/>',
-    calm:'<path d="M38 62q12 7 24 0" stroke-width="5"/>',sleepy:'<ellipse cx="50" cy="66" rx="6" ry="7" fill="#1E2944"/>',
+    calm:'<path d="M38 62q12 7 24 0" stroke-width="5"/>',neutral:'<path d="M38 64h24" stroke-width="5"/>',sleepy:'<ellipse cx="50" cy="66" rx="6" ry="7" fill="#1E2944"/>',
     sad:'<path d="M36 70q14-12 28 0" stroke-width="5"/>',mad:'<path d="M36 68q14-8 28 0" stroke-width="5"/>'}[k];
   const z=k==='sleepy'?'<path d="M70 14h10l-10 12h10" stroke="#1E2944" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>':'';
   return `<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" fill="${m.c}"/>${eyes}<g stroke="${ink}" fill="none" stroke-linecap="round">${mouth}</g>${z}</svg>`;}
