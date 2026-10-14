@@ -205,8 +205,6 @@ main:has(.eventRow){overflow-y:auto}
 .dish svg{flex-shrink:0}
 .dish .tx{min-width:0}
 .dish b{font-family:var(--display);font-weight:400;line-height:1.1;display:block;word-break:keep-all;overflow-wrap:anywhere}
-.al{display:flex;flex-wrap:wrap;gap:4px 6px;margin-top:6px}
-.al span{font-weight:700;padding:1px 8px;border-radius:9px;background:var(--paper);color:var(--muted);white-space:nowrap}
 .dish.seen{border-color:var(--leaf);box-shadow:0 5px 0 var(--leaf)}
 
 /* 급식 이름 따라 쓰기: 메뉴를 누르면 한 가지씩 크게 연습 */
@@ -383,7 +381,7 @@ main:has(.eventRow){overflow-y:auto}
   .slots{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));height:auto;gap:9px}.slot{min-height:130px;padding:8px 3px}.slot .ic,.slot .ic svg{width:56px;height:56px}.slot .s{font-size:21px}.slot .n{font-size:17px}
   .planBottom{grid-template-columns:minmax(230px,1fr) minmax(0,2fr);flex:none}.planPanel{padding:12px}.dismiss button{min-height:52px;font-size:17px}
   .pal{grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-auto-rows:70px!important;height:auto;max-height:none;overflow:visible;gap:9px}.pal .choice{font-size:21px;padding:0 8px;gap:5px}.pal svg{width:42px;height:42px;flex-shrink:0}
-  .tray{grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-auto-rows:minmax(125px,auto)!important;gap:9px}.dish{padding:8px;gap:6px}.dish svg{width:55px;height:55px}.dish b{font-size:clamp(18px,2.5vw,25px)!important}.al span{font-size:12px!important}
+  .tray{grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-auto-rows:minmax(125px,auto)!important;gap:9px}.dish{padding:8px;gap:6px}.dish svg{width:55px;height:55px}.dish b{font-size:clamp(18px,2.5vw,25px)!important}
   .mealWeek{gap:7px}.mealDay{height:72px;padding:7px}.mealDay strong{font-size:21px}.mealDay small{font-size:13px}
   .sum{grid-template-columns:minmax(0,1fr);gap:12px}.big{min-height:160px;flex-direction:row;align-items:center}.big p{font-size:36px}.big p.cheer{font-size:27px;text-align:right}
   .sum.hasEvent{grid-template-rows:none}.sum.hasEvent .big p{font-size:36px}.sum.hasEvent .big p.cheer{font-size:27px}.sum.hasEvent .mid{grid-template-rows:110px minmax(180px,auto) 110px;gap:12px}
@@ -446,7 +444,6 @@ main:has(.eventRow){overflow-y:auto}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const WD=['일','월','화','수','목','금','토'];
-const ALLERGY={1:'난류',2:'우유',3:'메밀',4:'땅콩',5:'대두',6:'밀',7:'고등어',8:'게',9:'새우',10:'돼지고기',11:'복숭아',12:'토마토',13:'아황산류',14:'호두',15:'닭고기',16:'쇠고기',17:'오징어',18:'조개류',19:'잣'};
 const STEP_DEF=[
   {id:'date',label:'날짜'},{id:'day',label:'요일'},{id:'weather',label:'날씨'},
   {id:'att',label:'출석'},{id:'mood',label:'기분'},{id:'plan',label:'일과'},
@@ -566,8 +563,7 @@ const ieyo=s=>s+(jong(s)?'이에요':'예요');
 const eunneun=s=>s+(jong(s)?'은':'는');
 const eul=s=>s+(jong(s)?'을':'를');
 function parseDish(line){const m=line.match(/^(.*?)[\s(]*((?:\d{1,2}\s*[.,]\s*)*\d{1,2})\s*\.?\)?\s*$/);
-  if(m&&m[1].trim())return{name:m[1].replace(/[\s(]+$/,'').trim(),al:m[2].split(/[.,]/).map(n=>+n.trim()).filter(n=>ALLERGY[n])};
-  return{name:line.trim(),al:[]}}
+  return{name:m&&m[1].trim()?m[1].replace(/[\s(]+$/,'').trim():line.trim()}}
 const splitList=s=>String(s||'').split(/[,，\n]/).map(x=>x.trim()).filter(Boolean);
 const isLunch=s=>/점심|급식/.test(s);
 const planToday=()=>(T.w>=1&&T.w<=5)?splitList(S.plan[T.w]).slice(0,9):[];
@@ -812,7 +808,7 @@ R.lunch=m=>{
   const practice=dateKey?practiceFor(dateKey):null,ds=dateKey?dishes(dateKey):[],n=Math.max(ds.length,1);
   const cols=n<=3?n:n<=6?3:4,rows=Math.ceil(n/cols);
   const H=weekly?340:410,G=16,dh=Math.min(weekly?150:170,Math.floor((H-(rows-1)*G)/rows));
-  const ic=rows<=2?84:60,af=rows<=2?16:14;
+  const ic=rows<=2?84:60;
   const cw=(MAIN_W-(cols-1)*G)/cols,textW=cw-ic-14-52;
   const nfOf=s=>Math.floor(Math.max(18,Math.min(rows<=2?40:30,textW/Math.max(s.length,1)*.94)));
   const am=dateKey?autoMeal(dateKey):null;
@@ -823,7 +819,7 @@ R.lunch=m=>{
      noday:'이 날짜에는 학교 급식 정보가 없어요.'}[am.state]||'';
   m.innerHTML=`<div class="qrow"><div><h1 class="q">${weekly?'이번 주 점심은 무엇일까요?':'오늘 점심은 무엇일까요?'}</h1><p class="sub">${weekly?'날짜를 누르면 그날 메뉴가 나와요. ':''}메뉴를 누르면 따라 쓰기가 열려요${src?' · '+src:''}</p></div><div class="say" id="say"></div></div>
     ${weekly?`<div class="mealWeek" id="mealWeek">${weekDates.map(day=>{const a=autoMeal(day.key),first=a?.state==='ok'?parseDish(a.lines[0]||'').name:a?.state==='noday'?'급식 정보 없음':a?.state==='error'?'다시 불러오기':'불러오는 중';return `<button class="mealDay ${day.key===dateKey?'pick':''}" data-date="${day.key}" aria-pressed="${day.key===dateKey}" aria-label="${day.month}월 ${day.day}일 ${WD[day.weekday]}요일, ${esc(first)}"><strong>${day.month}/${day.day} ${WD[day.weekday]}요일</strong><small>${esc(first)}</small></button>`}).join('')}</div>`:''}
-    <div class="tray" id="tray" style="grid-template-columns:repeat(${cols},1fr);grid-auto-rows:${dh}px">${ds.map((x,i)=>`<button class="dish ${practice.dishes[i]?'seen':''}" data-i="${i}" aria-label="${esc(x.name)} 따라 쓰기 열기">${dishIcon(i,ic)}<span class="tx"><b style="font-size:${nfOf(x.name)}px">${esc(x.name)}</b>${x.al.length?`<span class="al">${(rows<=2?x.al:x.al.slice(0,3)).map(k=>`<span style="font-size:${af}px">${k} ${ALLERGY[k]}</span>`).join('')}${rows>2&&x.al.length>3?`<span style="font-size:${af}px">외 ${x.al.length-3}</span>`:''}</span>`:''}</span></button>`).join('')||`<p class="rest" style="grid-column:1/-1;font-size:40px;margin-top:40px">${empty}</p>`}</div>`;
+    <div class="tray" id="tray" style="grid-template-columns:repeat(${cols},1fr);grid-auto-rows:${dh}px">${ds.map((x,i)=>`<button class="dish ${practice.dishes[i]?'seen':''}" data-i="${i}" aria-label="${esc(x.name)} 따라 쓰기 열기">${dishIcon(i,ic)}<span class="tx"><b style="font-size:${nfOf(x.name)}px">${esc(x.name)}</b></span></button>`).join('')||`<p class="rest" style="grid-column:1/-1;font-size:40px;margin-top:40px">${empty}</p>`}</div>`;
   if(weekly)$('#mealWeek').onclick=e=>{const b=e.target.closest('button[data-date]');if(!b)return;lunchDate=b.dataset.date;if(mealByDate[lunchDate]?.state==='error')delete mealByDate[lunchDate];go(cur,false);const d=weekDates.find(x=>x.key===lunchDate);speak(`${d.month}월 ${d.day}일 ${WD[d.weekday]}요일 급식이에요.`)};
   const openPractice=i=>{
     const x=ds[i],name=x.name,card=$('#tray').querySelector(`[data-i="${i}"]`);
@@ -958,7 +954,7 @@ $('#tBtn').onclick=()=>{
         <div class="f"><label for="sQ">학교 찾기</label><div class="srch"><input type="text" id="sQ" placeholder="예: 해솔학교"><button class="btn" id="sGo">찾기</button></div>
           <small id="reqMsg">학교 이름을 넣고 찾기를 눌러요.</small><div class="res" id="reqRes"></div></div>
       </div>
-      <div class="f" id="manBox" ${S.mealMode==='auto'?'hidden':''}><label for="sLunch">오늘 급식</label><small>한 줄에 한 가지(최대 12개). 알레르기 번호는 뒤에 (5.6.13)처럼 써요</small><textarea id="sLunch" style="min-height:230px">${esc(S.lunch)}</textarea></div>
+      <div class="f" id="manBox" ${S.mealMode==='auto'?'hidden':''}><label for="sLunch">오늘 급식</label><small>한 줄에 한 가지씩, 최대 12개를 입력해요</small><textarea id="sLunch" style="min-height:230px">${esc(S.lunch)}</textarea></div>
       <p class="pnote">학교를 고르면 매일 날짜에 맞는 급식을 불러와요. 학생 이름과 활동 기록은 이 기기에만 저장돼요.</p>
       <p class="pnote" id="transferMsg" role="status">다른 기기로 옮길 때는 설정 파일을 내보낸 뒤 가져오세요. 오늘 활동 기록은 파일에 담기지 않아요.</p>
     </div>
