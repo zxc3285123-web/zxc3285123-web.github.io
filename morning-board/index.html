@@ -78,12 +78,11 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 .calendarGrid span{display:grid;place-items:center;min-height:40px;font-size:20px;font-weight:700;border-radius:10px}
 .calendarGrid .weekName{color:var(--muted);font-size:16px;min-height:30px}
 .calendarGrid .sunday{color:var(--berry)}.calendarGrid .saturday{color:var(--sky)}
-.calendarGrid .calendarToday{background:var(--leaf-soft);outline:3px solid var(--leaf);outline-offset:-3px}
 .ilryeok{background:var(--card);border-radius:20px;box-shadow:0 10px 0 var(--line);overflow:hidden;text-align:center;position:relative}
 .ilryeok .rings{position:absolute;top:-10px;left:0;right:0;display:flex;justify-content:space-around;padding:0 70px}
 .ilryeok .rings span{width:22px;height:38px;border-radius:11px;background:var(--ink)}
 .ilryeok .head{background:var(--berry);color:#fff;font-family:var(--display);font-size:40px;padding:36px 0 14px}
-.ilryeok .num{font-family:var(--display);font-size:200px;line-height:1.05;padding:10px 0 0;font-variant-numeric:tabular-nums}
+.ilryeok .num{font-family:var(--display);font-size:200px;line-height:1.05;padding:10px 0 24px;font-variant-numeric:tabular-nums}
 .ilryeok .wd{font-family:var(--display);font-size:40px;padding:0 0 28px;color:var(--muted)}
 .ilryeok .unk{color:var(--no)}
 .dateQ{display:flex;flex-direction:column;gap:24px}
@@ -176,6 +175,8 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 .eventRow label{font-size:21px;font-weight:900;white-space:nowrap}
 .eventRow input{box-sizing:border-box;flex:1;min-width:0;height:54px;padding:0 16px;border:3px solid var(--line);border-radius:15px;background:#fff;color:var(--ink);font:700 21px var(--body)}
 .eventRow input::placeholder{color:var(--muted);font-weight:500}
+.eventRow button{height:54px;padding:0 18px;border-radius:15px;background:var(--ink);color:#fff;font-size:20px;font-weight:900;white-space:nowrap}
+.eventGuide{white-space:normal;text-align:center;overflow-wrap:anywhere;line-height:1.25}
 .eventSummary{margin:16px 0;font-size:23px;line-height:1.35;overflow-wrap:anywhere}
 .eventSummary b{display:block;color:#BFE8CE;font-size:18px}
 .tool.fullscreen{width:52px;padding:0;justify-content:center}.tool.fullscreen svg{width:26px;height:26px}
@@ -187,7 +188,6 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 .mealDay strong{font-family:var(--display);font-size:27px;font-weight:400;white-space:nowrap}
 .mealDay small{font-size:16px;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .mealDay.pick{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 4px 0 var(--accent)}
-.mealDay.today strong::after{content:' 오늘';font:700 14px var(--body);color:var(--leaf)}
 .tray{display:grid;gap:16px;margin-top:20px}
 .dish{background:var(--card);border:4px solid var(--line);border-radius:24px;padding:12px 16px;display:flex;gap:14px;align-items:center;text-align:left;box-shadow:0 5px 0 var(--line);min-width:0;overflow:hidden}
 .dish svg{flex-shrink:0}
@@ -374,14 +374,14 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
   .top{padding:10px 12px}.brand b{font-size:24px}.clock{font-size:23px}.today{order:2}.tools{order:3;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));width:100%;flex:none;gap:6px}.tool{font-size:13px;height:38px;justify-content:center;padding:0 3px}.tool:nth-child(n){grid-column:span 2}
   main{padding:18px 12px 24px;min-height:0}.q{font-size:30px}.sub{font-size:15px}.qrow .say{font-size:22px}
   .dateWrap{grid-template-columns:1fr;gap:14px}.monthCalendar{max-width:390px;width:100%;margin:auto}.ilryeok{max-width:260px;width:100%;margin:auto}.ilryeok .head{padding:27px 0 7px}.ilryeok .num{font-size:100px;line-height:1}.ilryeok .wd{padding-bottom:12px}.dateQ{grid-column:auto;padding:16px}.dateQ .row3 .choice{height:84px;font-size:32px}
-  .eventRow{align-items:stretch;flex-direction:column;gap:6px}.eventRow label{font-size:18px}.eventRow input{flex:none;width:100%;font-size:18px}
+  .eventRow{align-items:stretch;flex-direction:column;gap:6px}.eventRow label{font-size:18px}.eventRow input{flex:none;width:100%;font-size:18px}.eventRow button{width:100%;height:50px;font-size:18px}
   .tool.fullscreen{width:auto;min-width:0}
   .week{grid-template-columns:repeat(4,minmax(0,1fr))}.week .choice{height:105px;font-size:43px}.week .choice small{font-size:13px}
   .wGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.wGrid .choice{height:120px;font-size:19px}.wGrid svg{width:60px;height:60px}.fGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .mFaces{grid-template-columns:repeat(2,1fr)}.mFaces .choice:last-child:nth-child(3n + 1){grid-column:auto}.mFaces .choice:last-child:nth-child(2n + 1){grid-column:1/-1;width:calc(50% - 4px);justify-self:center}.slots{grid-template-columns:repeat(3,minmax(0,1fr))}.pal{grid-template-columns:repeat(2,minmax(0,1fr))!important}
   .dismiss button{height:62px;flex-direction:column;gap:0;font-size:16px;line-height:1.1}
   .tray{grid-template-columns:repeat(2,minmax(0,1fr))!important}.dish{min-height:100px}.dish svg{width:40px;height:40px}
-  .mealWeek{grid-template-columns:repeat(3,minmax(0,1fr))}.mealDay{height:69px}.mealDay.today{order:0}.mealDay strong{font-size:17px}.mealDay.today strong::after{content:''}.mealDay.today:not(.pick){border-color:#80BA99}
+  .mealWeek{grid-template-columns:repeat(3,minmax(0,1fr))}.mealDay{height:69px}.mealDay strong{font-size:17px}
   .mid{grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto}.mid>.box:nth-child(-n+2){min-height:120px;box-sizing:border-box}.mid .wx{font-size:18px}.mid .wx svg{width:35px;height:35px}.mid>.box:nth-child(2) p{font-size:27px}.sum>.box:last-child{max-height:none;overflow:visible}.lessonList{grid-template-columns:repeat(2,minmax(0,1fr))}.lesson{font-size:18px}.lesson b{font-size:13px}
   .pbody{grid-template-columns:1fr}.panel footer .btn{height:43px;padding:0 12px;font-size:15px}.panel header h2{font-size:28px}
   .writingHead h2{font-size:29px}.writingActions{flex-wrap:wrap}.writingActions button{font-size:15px}
@@ -456,10 +456,11 @@ if(/^\d{7,10}$/.test(shared.get('school')||'')&&/^[A-Z][0-9]{2}$/.test(shared.ge
 const now=new Date();
 const T={y:now.getFullYear(),m:now.getMonth()+1,d:now.getDate(),w:now.getDay()};
 const dayKey='morning:day:'+T.y+'-'+T.m+'-'+T.d;
-const blankDay=()=>({att:{},mood:{},teacherMood:null,weather:[],feel:null,dateOk:{m:false,d:false},dayOk:false,pick:{},dismissal:null,event:'',dishes:{},writing:{}});
+const blankDay=()=>({att:{},mood:{},teacherMood:null,weather:[],feel:null,dateOk:{m:false,d:false},dayOk:false,pick:{},dismissal:null,event:'',eventWriting:{name:'',paths:[]},dishes:{},writing:{}});
 let D=Object.assign(blankDay(),store.get(dayKey,{}));if(!D.pick)D.pick={};if(!D.writing)D.writing={};
 if(!Array.isArray(D.weather))D.weather=D.weather?[D.weather]:[];
 if(typeof D.event!=='string')D.event='';
+if(!D.eventWriting||!Array.isArray(D.eventWriting.paths))D.eventWriting={name:'',paths:[]};
 if(![5,6,7].includes(D.dismissal))D.dismissal=null;
 function saveDay(){store.set(dayKey,D)}
 
@@ -601,13 +602,12 @@ const R={};
 R.date=m=>{
   const mm=D.dateOk.m,dd=D.dateOk.d;
   const firstWeekday=new Date(T.y,T.m-1,1).getDay(),lastDay=new Date(T.y,T.m,0).getDate();
-  const calendarDays=Array.from({length:firstWeekday+lastDay},(_,i)=>{const day=i-firstWeekday+1,wd=i%7;return `<span class="${day===T.d?'calendarToday':''} ${wd===0?'sunday':wd===6?'saturday':''}" ${day===T.d?'aria-label="오늘 '+T.d+'일"':''}>${day>0?day:''}</span>`}).join('');
+  const calendarDays=Array.from({length:firstWeekday+lastDay},(_,i)=>{const day=i-firstWeekday+1,wd=i%7;return `<span class="${wd===0?'sunday':wd===6?'saturday':''}">${day>0?day:''}</span>`}).join('');
   m.innerHTML=`<div class="dateWrap">
     <div class="monthCalendar" aria-label="${T.y}년 ${T.m}월 달력"><h2>${T.y}년 ${T.m}월</h2><div class="calendarGrid">${WD.map((w,i)=>`<span class="weekName ${i===0?'sunday':i===6?'saturday':''}">${w}</span>`).join('')}${calendarDays}</div></div>
     <div class="ilryeok"><div class="rings"><span></span><span></span></div>
       <div class="head" id="ilM">${T.y}년 ${mm?T.m+'월':'<span style="opacity:.6">?월</span>'}</div>
-      <div class="num ${dd?'':'unk'}" id="ilD">${dd?T.d:'?'}</div>
-      <div class="wd" id="ilW">${dd?'오늘':'&nbsp;'}</div></div>
+      <div class="num ${dd?'':'unk'}" id="ilD">${dd?T.d:'?'}</div></div>
     <div class="dateQ">
       <div><span class="qtag" id="qtag">${!mm?'첫 번째':'두 번째'}</span><h1 class="q" id="dq">${!mm?'오늘은 몇 월이에요?':'오늘은 며칠이에요?'}</h1>
       <p class="sub">달력과 칠판을 보고 찾아봐요</p></div>
@@ -620,7 +620,7 @@ R.date=m=>{
     const opts=shuffle([...pool]);
     if(D.dateOk.d){choices(box,opts,T.d,()=>{},say,o=>o+'일');markGood(box,T.d,opts);setSay(say,`오늘은 ${T.m}월 ${T.d}일이에요`);return}
     choices(box,opts,T.d,()=>{D.dateOk.d=true;saveDay();const n=$('#ilD');n.textContent=T.d;n.classList.remove('unk');n.classList.add('pop');
-      $('#ilW').textContent='오늘';setSay(say,`맞아요! ${T.m}월 ${T.d}일이에요`);speak(`맞아요. 오늘은 ${T.m}월 ${T.d}일이에요.`);paintSteps()},say,o=>o+'일');
+      setSay(say,`맞아요! ${T.m}월 ${T.d}일이에요`);speak(`맞아요. 오늘은 ${T.m}월 ${T.d}일이에요.`);paintSteps()},say,o=>o+'일');
   }
   if(!mm){
     const opts=shuffle([T.m,(T.m%12)+1,((T.m+10)%12)+1]);
@@ -701,9 +701,46 @@ R.mood=m=>{
   if(sel)setSay($('#say'),`${list.find(x=>x.id===sel).label}, 기분을 골라요`);
   lastSay=`${list.find(x=>x.id===sel).label}, 지금 기분이 어때요?`;
 };
+const eventEditorHTML=()=>`<div class="eventRow"><label for="todayEvent">오늘의 행사</label><input id="todayEvent" type="text" maxlength="100" value="${esc(D.event)}" placeholder="예: 체육대회, 현장학습"><button id="eventWrite" type="button">글씨 쓰기</button></div>`;
+function openEventWriting(){
+  $('#writingOverlay')?.remove();
+  const name=D.event.trim(),saved=D.eventWriting;
+  let paths=saved.name===name?saved.paths:[];
+  const overlay=document.createElement('div');overlay.className='writingOverlay';overlay.id='writingOverlay';
+  const fontSize=Math.max(30,Math.min(105,Math.floor(780/Math.max(name.length,1))));
+  overlay.innerHTML=`<div class="writingPanel" role="dialog" aria-modal="true" aria-label="오늘의 행사 글씨 쓰기">
+    <div class="writingHead"><h2>오늘의 행사</h2><button id="writingClose" type="button">닫기</button></div>
+    <p>${name?'흐린 글씨를 손가락이나 펜으로 따라 써요.':'행사 이름을 손가락이나 펜으로 써요.'}</p>
+    <div class="writingSurface"><span class="writingGuide eventGuide" style="font-size:${fontSize}px">${esc(name)}</span><canvas class="writingCanvas" aria-label="오늘의 행사 글씨 쓰는 자리"></canvas></div>
+    <div class="writingActions"><button id="writingClear" type="button">지우고 다시 쓰기</button><button class="nextDish" id="writingDone" type="button">다 썼어요</button></div></div>`;
+  $('#stage').appendChild(overlay);
+  const canvas=overlay.querySelector('canvas'),dpr=window.devicePixelRatio||1;
+  canvas.width=Math.round(canvas.clientWidth*dpr);canvas.height=Math.round(canvas.clientHeight*dpr);
+  const save=()=>{D.eventWriting={name,paths};saveDay()};
+  const renderInk=()=>{const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#1E2944';ctx.fillStyle='#1E2944';ctx.lineWidth=7*dpr;ctx.lineCap='round';ctx.lineJoin='round';
+    paths.forEach(path=>{if(!path.length)return;if(path.length===1){ctx.beginPath();ctx.arc(path[0][0]*canvas.width,path[0][1]*canvas.height,3.5*dpr,0,Math.PI*2);ctx.fill();return}
+      ctx.beginPath();path.forEach(([px,py],j)=>j?ctx.lineTo(px*canvas.width,py*canvas.height):ctx.moveTo(px*canvas.width,py*canvas.height));ctx.stroke()})};
+  renderInk();let active=null;
+  const addPoint=e=>{const rect=canvas.getBoundingClientRect(),point=[Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width)),Math.max(0,Math.min(1,(e.clientY-rect.top)/rect.height))];
+    const prev=active[active.length-1];if(!prev||Math.hypot(point[0]-prev[0],point[1]-prev[1])>.004){active.push(point);renderInk()}};
+  canvas.onpointerdown=e=>{e.preventDefault();canvas.setPointerCapture(e.pointerId);active=[];paths.push(active);addPoint(e)};
+  canvas.onpointermove=e=>{if(active){e.preventDefault();addPoint(e)}};
+  const finish=()=>{if(!active)return;save();active=null};
+  canvas.onpointerup=finish;canvas.onpointercancel=finish;
+  const close=()=>{finish();overlay.remove();$('#eventWrite')?.focus()};
+  overlay.querySelector('#writingClose').onclick=close;
+  overlay.querySelector('#writingDone').onclick=()=>{close();speak('잘 썼어요.')};
+  overlay.querySelector('#writingClear').onclick=()=>{paths=[];save();renderInk();speak('지우고 다시 써 봐요.')};
+  overlay.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();close()}};
+  overlay.querySelector('#writingClose').focus();
+}
+function bindEventEditor(){
+  $('#todayEvent').oninput=e=>{D.event=e.target.value.slice(0,100);saveDay()};
+  $('#eventWrite').onclick=openEventWriting;
+}
 R.plan=m=>{
   const p=planToday();
-  if(!p.length){m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘의 일과</h1></div></div><div class="rest">오늘은 ${WD[T.w]}요일, 학교 쉬는 날이에요</div><p class="sub" style="text-align:center">선생님 화면에서 요일별 시간표를 바꿀 수 있어요</p><div class="eventRow"><label for="todayEvent">오늘의 행사</label><input id="todayEvent" type="text" maxlength="100" value="${esc(D.event)}" placeholder="예: 체육대회, 현장학습"></div>`;$('#todayEvent').oninput=e=>{D.event=e.target.value.slice(0,100);saveDay()};lastSay=`오늘은 ${WD[T.w]}요일, 학교 쉬는 날이에요.`;return}
+  if(!p.length){m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘의 일과</h1></div></div><div class="rest">오늘은 ${WD[T.w]}요일, 학교 쉬는 날이에요</div><p class="sub" style="text-align:center">선생님 화면에서 요일별 시간표를 바꿀 수 있어요</p>${eventEditorHTML()}`;bindEventEditor();lastSay=`오늘은 ${WD[T.w]}요일, 학교 쉬는 날이에요.`;return}
   let n=0;const items=p.map(s=>{const l=isLunch(s);if(!l)n++;return{ans:s,lunch:l,n}});
   const pal=uniq([1,2,3,4,5].flatMap(w=>splitList(S.plan[w]).slice(0,9)).filter(x=>!isLunch(x)));
   const firstEmpty=()=>{const i=items.findIndex((x,i)=>!x.lunch&&!D.pick[i]);return i<0?null:i};
@@ -711,7 +748,7 @@ R.plan=m=>{
   const pc=pal.length<=5?Math.max(1,pal.length):5;
   m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘은 무엇을 배울까요?</h1></div><div class="say" id="say"></div><button class="mini-btn" id="clr">과목 처음부터</button></div>
     <div class="slots" id="slots"></div>
-    <div class="eventRow"><label for="todayEvent">오늘의 행사</label><input id="todayEvent" type="text" maxlength="100" value="${esc(D.event)}" placeholder="예: 체육대회, 현장학습"></div>
+    ${eventEditorHTML()}
     <div class="dismiss" id="dismiss"><b>오늘 하교 시간</b>${[5,6,7].map(n=>`<button type="button" data-period="${n}" class="${D.dismissal===n?'pick':''}" aria-pressed="${D.dismissal===n}"><span>${n}교시</span><span>${DISMISS[n]}</span></button>`).join('')}</div>
     <p class="palLab">${S.planCheck?'시간표를 보고 알맞은 과목을 눌러요':'하고 싶은 과목을 골라 넣어요'}${pal.length>10?' · 아래로 내려 다른 과목도 봐요':''}</p>
     <div class="pal" id="pal" style="grid-template-columns:repeat(${pc},1fr);grid-auto-rows:minmax(82px,1fr)">${pal.map((s,i)=>`<button class="choice" data-i="${i}">${subjIcon(s)}<span>${esc(s)}</span></button>`).join('')}</div>`;
@@ -721,7 +758,7 @@ R.plan=m=>{
     $('#pal').classList.toggle('off',slotSel===null);
     [...$('#pal').children].forEach(b=>b.classList.remove('no'))};
   drawSlots();
-  $('#todayEvent').oninput=e=>{D.event=e.target.value.slice(0,100);saveDay()};
+  bindEventEditor();
   $('#dismiss').onclick=e=>{const b=e.target.closest('button[data-period]');if(!b)return;D.dismissal=Number(b.dataset.period);saveDay();
     $('#dismiss').querySelectorAll('button').forEach(x=>{const chosen=x===b;x.classList.toggle('pick',chosen);x.setAttribute('aria-pressed',String(chosen))});
     const line=`오늘은 ${D.dismissal}교시가 끝나는 ${DISMISS[D.dismissal]}에 하교해요.`;setSay($('#say'),line);speak(`오늘은 ${D.dismissal}교시가 끝나는 ${DISMISS_SAY[D.dismissal]}에 하교해요.`);paintSteps()};
@@ -751,12 +788,12 @@ R.lunch=m=>{
   const nfOf=s=>Math.floor(Math.max(18,Math.min(rows<=2?40:30,textW/Math.max(s.length,1)*.94)));
   const am=dateKey?autoMeal(dateKey):null;
   const src=weekly?`${esc(S.school.name)} 급식`:am?`${esc(S.school.name)} 급식`:(S.sample?'지금은 예시 메뉴예요':'');
-  const empty=weekly&&!dateKey?'위에서 날짜를 하나 골라요.':!am?'선생님 화면에서 학교를 등록해 주세요.':
+  const empty=weekly&&!dateKey?'오늘 날짜를 선택해요.':!am?'선생님 화면에서 학교를 등록해 주세요.':
     {loading:'급식을 불러오고 있어요.',
      error:am.error||'학교 급식을 불러오지 못했어요. 잠시 후 다시 열어 주세요.',
      noday:'이 날짜에는 학교 급식 정보가 없어요.'}[am.state]||'';
   m.innerHTML=`<div class="qrow"><div><h1 class="q">${weekly?'이번 주 점심은 무엇일까요?':'오늘 점심은 무엇일까요?'}</h1><p class="sub">${weekly?'날짜를 누르면 그날 메뉴가 나와요. ':''}메뉴를 누르면 따라 쓰기가 열려요${src?' · '+src:''}</p></div><div class="say" id="say"></div></div>
-    ${weekly?`<div class="mealWeek" id="mealWeek">${weekDates.map(day=>{const a=autoMeal(day.key),first=a?.state==='ok'?parseDish(a.lines[0]||'').name:a?.state==='noday'?'급식 정보 없음':a?.state==='error'?'다시 불러오기':'불러오는 중';return `<button class="mealDay ${day.key===dateKey?'pick':''} ${day.key===ymd?'today':''}" data-date="${day.key}" aria-pressed="${day.key===dateKey}" aria-label="${day.month}월 ${day.day}일 ${WD[day.weekday]}요일${day.key===ymd?' 오늘':''}, ${esc(first)}"><strong>${day.month}/${day.day} ${WD[day.weekday]}요일</strong><small>${esc(first)}</small></button>`}).join('')}</div>`:''}
+    ${weekly?`<div class="mealWeek" id="mealWeek">${weekDates.map(day=>{const a=autoMeal(day.key),first=a?.state==='ok'?parseDish(a.lines[0]||'').name:a?.state==='noday'?'급식 정보 없음':a?.state==='error'?'다시 불러오기':'불러오는 중';return `<button class="mealDay ${day.key===dateKey?'pick':''}" data-date="${day.key}" aria-pressed="${day.key===dateKey}" aria-label="${day.month}월 ${day.day}일 ${WD[day.weekday]}요일, ${esc(first)}"><strong>${day.month}/${day.day} ${WD[day.weekday]}요일</strong><small>${esc(first)}</small></button>`}).join('')}</div>`:''}
     <div class="tray" id="tray" style="grid-template-columns:repeat(${cols},1fr);grid-auto-rows:${dh}px">${ds.map((x,i)=>`<button class="dish ${practice.dishes[i]?'seen':''}" data-i="${i}" aria-label="${esc(x.name)} 따라 쓰기 열기">${dishIcon(i,ic)}<span class="tx"><b style="font-size:${nfOf(x.name)}px">${esc(x.name)}</b>${x.al.length?`<span class="al">${(rows<=2?x.al:x.al.slice(0,3)).map(k=>`<span style="font-size:${af}px">${k} ${ALLERGY[k]}</span>`).join('')}${rows>2&&x.al.length>3?`<span style="font-size:${af}px">외 ${x.al.length-3}</span>`:''}</span>`:''}</span></button>`).join('')||`<p class="rest" style="grid-column:1/-1;font-size:40px;margin-top:40px">${empty}</p>`}</div>`;
   if(weekly)$('#mealWeek').onclick=e=>{const b=e.target.closest('button[data-date]');if(!b)return;lunchDate=b.dataset.date;if(mealByDate[lunchDate]?.state==='error')delete mealByDate[lunchDate];go(cur,false);const d=weekDates.find(x=>x.key===lunchDate);speak(`${d.month}월 ${d.day}일 ${WD[d.weekday]}요일 급식이에요.`)};
   const openPractice=i=>{
@@ -792,7 +829,7 @@ R.lunch=m=>{
     overlay.querySelector('#writingClose').focus();
   };
   $('#tray').onclick=e=>{const card=e.target.closest('.dish');if(card)openPractice(+card.dataset.i)};
-  lastSay=weekly&&!selected?'이번 주 점심 날짜를 하나 골라요.':(weekly?`${selected.month}월 ${selected.day}일 점심은 `:'오늘 점심은 ')+ds.map(x=>x.name).join(', ')+(ds.length?'이에요.':'');
+  lastSay=weekly&&!selected?'오늘 날짜를 선택해요.':(weekly?`${selected.month}월 ${selected.day}일 점심은 `:'오늘 점심은 ')+ds.map(x=>x.name).join(', ')+(ds.length?'이에요.':'');
   if(weekly)loadWeekMeals();
 };
 R.sum=m=>{
