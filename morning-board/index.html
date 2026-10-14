@@ -199,6 +199,7 @@ main:has(.eventRow){overflow-y:auto}
 .mealDay{height:72px;min-width:0;padding:9px 12px;border:3px solid var(--line);border-radius:19px;background:var(--card);display:flex;align-items:center;justify-content:center;text-align:center;box-shadow:0 4px 0 var(--line)}
 .mealDay strong{font-family:var(--display);font-size:27px;font-weight:400;white-space:nowrap}
 .mealDay.pick{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 4px 0 var(--accent)}
+.mealDay.try{border-color:var(--berry);background:#FFE8EE;box-shadow:0 4px 0 var(--berry);animation:shake .3s}
 .tray{display:grid;gap:16px;margin-top:20px}
 .dish{background:var(--card);border:4px solid var(--line);border-radius:24px;padding:12px 16px;display:flex;gap:14px;align-items:center;text-align:left;box-shadow:0 5px 0 var(--line);min-width:0;overflow:hidden}
 .dish svg{flex-shrink:0}
@@ -803,7 +804,7 @@ R.plan=m=>{
 };
 R.lunch=m=>{
   $('#writingOverlay')?.remove();
-  const weekly=S.mealMode==='auto'&&!!S.school,dateKey=weekly?lunchDate:ymd,selected=weekDates.find(x=>x.key===dateKey);
+  const weekly=S.mealMode==='auto'&&!!S.school,schoolDay=T.w>=1&&T.w<=5,dateKey=weekly?lunchDate:ymd,selected=weekDates.find(x=>x.key===dateKey);
   const practice=dateKey?practiceFor(dateKey):null,ds=dateKey?dishes(dateKey):[],n=Math.max(ds.length,1);
   const cols=n<=3?n:n<=6?3:4,rows=Math.ceil(n/cols);
   const H=weekly?340:410,G=16,dh=Math.min(weekly?150:170,Math.floor((H-(rows-1)*G)/rows));
@@ -812,14 +813,22 @@ R.lunch=m=>{
   const nfOf=s=>Math.floor(Math.max(18,Math.min(rows<=2?40:30,textW/Math.max(s.length,1)*.94)));
   const am=dateKey?autoMeal(dateKey):null;
   const src=weekly?`${esc(S.school.name)} 급식`:am?`${esc(S.school.name)} 급식`:(S.sample?'지금은 예시 메뉴예요':'');
-  const empty=weekly&&!dateKey?'오늘 날짜를 선택해요.':!am?'선생님 화면에서 학교를 등록해 주세요.':
+  const empty=weekly&&!schoolDay?'오늘은 학교 급식이 없는 날이에요.':weekly&&!dateKey?'오늘 날짜를 선택해요.':!am?'선생님 화면에서 학교를 등록해 주세요.':
     {loading:'급식을 불러오고 있어요.',
      error:am.error||'학교 급식을 불러오지 못했어요. 잠시 후 다시 열어 주세요.',
      noday:'이 날짜에는 학교 급식 정보가 없어요.'}[am.state]||'';
-  m.innerHTML=`<div class="qrow"><div><h1 class="q">${weekly?'이번 주 점심은 무엇일까요?':'오늘 점심은 무엇일까요?'}</h1><p class="sub">${weekly?'날짜를 누르면 그날 메뉴가 나와요. ':''}메뉴를 누르면 따라 쓰기가 열려요${src?' · '+src:''}</p></div><div class="say" id="say"></div></div>
-    ${weekly?`<div class="mealWeek" id="mealWeek">${weekDates.map(day=>`<button class="mealDay ${day.key===dateKey?'pick':''}" data-date="${day.key}" aria-pressed="${day.key===dateKey}" aria-label="${day.month}월 ${day.day}일 ${WD[day.weekday]}요일"><strong>${day.month}/${day.day} ${WD[day.weekday]}요일</strong></button>`).join('')}</div>`:''}
+  m.innerHTML=`<div class="qrow"><div><h1 class="q">${weekly?'이번 주 점심은 무엇일까요?':'오늘 점심은 무엇일까요?'}</h1><p class="sub">${weekly?'오늘 날짜를 누르면 메뉴가 나와요. ':''}메뉴를 누르면 따라 쓰기가 열려요${src?' · '+src:''}</p></div><div class="say" id="say"></div></div>
+    ${weekly&&schoolDay?`<div class="mealWeek" id="mealWeek">${weekDates.map(day=>`<button class="mealDay ${day.key===dateKey?'pick':''}" data-date="${day.key}" aria-pressed="${day.key===dateKey}" aria-label="${day.month}월 ${day.day}일 ${WD[day.weekday]}요일"><strong>${day.month}/${day.day} ${WD[day.weekday]}요일</strong></button>`).join('')}</div>`:''}
     <div class="tray" id="tray" style="grid-template-columns:repeat(${cols},1fr);grid-auto-rows:${dh}px">${ds.map((x,i)=>`<button class="dish ${practice.dishes[i]?'seen':''}" data-i="${i}" aria-label="${esc(x.name)} 따라 쓰기 열기">${dishIcon(i,ic)}<span class="tx"><b style="font-size:${nfOf(x.name)}px">${esc(x.name)}</b></span></button>`).join('')||`<p class="rest" style="grid-column:1/-1;font-size:40px;margin-top:40px">${empty}</p>`}</div>`;
-  if(weekly)$('#mealWeek').onclick=e=>{const b=e.target.closest('button[data-date]');if(!b)return;lunchDate=b.dataset.date;if(mealByDate[lunchDate]?.state==='error')delete mealByDate[lunchDate];go(cur,false);const d=weekDates.find(x=>x.key===lunchDate);speak(`${d.month}월 ${d.day}일 ${WD[d.weekday]}요일 급식이에요.`)};
+  if(weekly&&schoolDay)$('#mealWeek').onclick=e=>{const b=e.target.closest('button[data-date]');if(!b)return;
+    if(b.dataset.date!==ymd){
+      if(lunchDate){lunchDate=null;go(cur,false)}
+      const wrong=$('#mealWeek').querySelector(`[data-date="${b.dataset.date}"]`);
+      wrong.classList.add('try');setTimeout(()=>wrong.classList.remove('try'),1200);
+      setSay($('#say'),'다시 선택해요',false);speak('오늘 날짜를 확인하고 다시 선택해요.');return;
+    }
+    lunchDate=b.dataset.date;if(mealByDate[lunchDate]?.state==='error')delete mealByDate[lunchDate];go(cur,false);
+    setSay($('#say'),'맞아요! 오늘 날짜예요');speak(`${T.m}월 ${T.d}일 ${WD[T.w]}요일 급식이에요.`)};
   const openPractice=i=>{
     const x=ds[i],name=x.name,card=$('#tray').querySelector(`[data-i="${i}"]`);
     practice.dishes[i]=1;practice.save();card.classList.add('seen');paintSteps();setSay($('#say'),name);speak(`${name}. 따라 써 봐요.`);
@@ -853,8 +862,8 @@ R.lunch=m=>{
     overlay.querySelector('#writingClose').focus();
   };
   $('#tray').onclick=e=>{const card=e.target.closest('.dish');if(card)openPractice(+card.dataset.i)};
-  lastSay=weekly&&!selected?'오늘 날짜를 선택해요.':(weekly?`${selected.month}월 ${selected.day}일 점심은 `:'오늘 점심은 ')+ds.map(x=>x.name).join(', ')+(ds.length?'이에요.':'');
-  if(weekly)loadWeekMeals();
+  lastSay=weekly&&!schoolDay?'오늘은 학교 급식이 없는 날이에요.':weekly&&!selected?'오늘 날짜를 선택해요.':(weekly?`${selected.month}월 ${selected.day}일 점심은 `:'오늘 점심은 ')+ds.map(x=>x.name).join(', ')+(ds.length?'이에요.':'');
+  if(weekly&&schoolDay)loadWeekMeals();
 };
 function eventInkImage(writing){
   const paths=writing?.paths||[];
