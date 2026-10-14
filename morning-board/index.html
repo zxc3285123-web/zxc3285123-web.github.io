@@ -171,6 +171,7 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 .dismiss button{height:52px;flex:1;min-width:0;padding:0 8px;border:3px solid var(--line);border-radius:15px;background:var(--card);font-size:19px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px}
 .dismiss button span:last-child{font-variant-numeric:tabular-nums}
 .dismiss button.pick{border-color:var(--accent);background:var(--accent-soft);color:#8E3E17}
+.dismiss button.try{border-color:var(--berry);background:#FFE8EE;animation:shake .3s}
 main:has(.eventRow){overflow-y:auto}
 .eventRow{display:flex;align-items:center;gap:14px;margin-top:12px;flex-shrink:0}
 .eventRow>strong{font-size:21px;font-weight:900;white-space:nowrap}
@@ -552,6 +553,8 @@ const isLunch=s=>/점심|급식/.test(s);
 const planToday=()=>(T.w>=1&&T.w<=5)?splitList(S.plan[T.w]).slice(0,9):[];
 const DISMISS={5:'13:50',6:'14:40',7:'15:30'};
 const DISMISS_SAY={5:'오후 1시 50분',6:'오후 2시 40분',7:'오후 3시 30분'};
+const expectedDismissal=()=>{const n=planToday().filter(s=>!isLunch(s)).length;return[5,6,7].includes(n)?n:null};
+const validDismissal=()=>{const expected=expectedDismissal();return !expected||D.dismissal===expected?D.dismissal:null};
 const ymd=`${T.y}${String(T.m).padStart(2,'0')}${String(T.d).padStart(2,'0')}`;
 const weekDates=(()=>{const monday=new Date(T.y,T.m-1,T.d);monday.setDate(monday.getDate()-((T.w+6)%7));return Array.from({length:5},(_,i)=>{const d=new Date(monday);d.setDate(monday.getDate()+i);return{key:`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`,month:d.getMonth()+1,day:d.getDate(),weekday:i+1}})})();
 let lunchDate=null;
@@ -730,6 +733,7 @@ function bindEventEditor(){
 }
 R.plan=m=>{
   const p=planToday();
+  if(D.dismissal&&!validDismissal()){D.dismissal=null;saveDay()}
   if(!p.length){m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘의 일과</h1></div></div><div class="rest">오늘은 ${WD[T.w]}요일, 학교 쉬는 날이에요</div><p class="sub" style="text-align:center">선생님 화면에서 요일별 시간표를 바꿀 수 있어요</p>${eventEditorHTML()}`;bindEventEditor();lastSay=`오늘은 ${WD[T.w]}요일, 학교 쉬는 날이에요.`;return}
   let n=0;const items=p.map(s=>{const l=isLunch(s);if(!l)n++;return{ans:s,lunch:l,n}});
   const pal=uniq([1,2,3,4,5].flatMap(w=>splitList(S.plan[w]).slice(0,9)).filter(x=>!isLunch(x)));
@@ -749,7 +753,9 @@ R.plan=m=>{
     [...$('#pal').children].forEach(b=>b.classList.remove('no'))};
   drawSlots();
   bindEventEditor();
-  $('#dismiss').onclick=e=>{const b=e.target.closest('button[data-period]');if(!b)return;D.dismissal=Number(b.dataset.period);saveDay();
+  $('#dismiss').onclick=e=>{const b=e.target.closest('button[data-period]');if(!b)return;const picked=Number(b.dataset.period),expected=expectedDismissal();
+    if(expected&&picked!==expected){b.classList.add('try');setTimeout(()=>b.classList.remove('try'),1200);const line='다시 해 봐요. 시간표의 마지막 교시를 확인해요.';setSay($('#say'),line,false);speak(line);return}
+    D.dismissal=picked;saveDay();
     $('#dismiss').querySelectorAll('button').forEach(x=>{const chosen=x===b;x.classList.toggle('pick',chosen);x.setAttribute('aria-pressed',String(chosen))});
     const line=`오늘은 ${D.dismissal}교시가 끝나는 ${DISMISS[D.dismissal]}에 하교해요.`;setSay($('#say'),line);speak(`오늘은 ${D.dismissal}교시가 끝나는 ${DISMISS_SAY[D.dismissal]}에 하교해요.`);paintSteps()};
   const ask=()=>{if(slotSel===null){const l='시간표를 다 채웠어요!';setSay($('#say'),l);speak('시간표를 다 채웠어요. 잘했어요.');return}
@@ -824,6 +830,7 @@ R.lunch=m=>{
 };
 R.sum=m=>{
   const a=S.kids.filter(k=>D.att[k]==='in').length,ds=dishes();
+  const dismissal=validDismissal();
   let period=0;
   const learned=planToday().map((s,i)=>{if(isLunch(s))return null;period++;return{period,subject:D.pick[i]||s,chosen:!!D.pick[i]}}).filter(Boolean);
   const ws=WEATHER.filter(x=>D.weather.includes(x.k)),f=FEEL.find(x=>x.k===D.feel),teacherMood=MOODS.find(x=>x.k===D.teacherMood);
@@ -831,7 +838,7 @@ R.sum=m=>{
   m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘 아침을 정리해요</h1></div></div>
     <div class="sum">
       <div class="box big"><div><h3>오늘은</h3><p>${T.y}년<br>${T.m}월 ${T.d}일<br><span style="color:${T.w===0?'#FF9DB4':T.w===6?'#9CCBFF':'#FFFFFF'}">${WD[T.w]}요일</span></p>${D.event?`<div class="eventSummary"><b>오늘의 행사</b>${esc(D.event)}</div>`:''}</div>
-        <p class="cheer">${D.dismissal?`<span class="homeTime">하교 ${DISMISS[D.dismissal]}</span><br>`:''}오늘도 힘차게<br>시작해요!</p></div>
+        <p class="cheer">${dismissal?`<span class="homeTime">하교 ${DISMISS[dismissal]}</span><br>`:''}오늘도 힘차게<br>시작해요!</p></div>
       <div class="mid">
         <div class="box"><h3>날씨</h3><p class="wx">${ws.length?wIcon(ws[0].k)+`<span>${ws.map(x=>x.n).join(' · ')}${f?' · '+f.t:''}</span>`:'아직 안 골랐어요'}</p></div>
         <div class="box"><h3>출석</h3><p>${a}명 / ${S.kids.length}명</p></div>
@@ -840,13 +847,13 @@ R.sum=m=>{
       </div>
       <div class="box"><h3>우리 반 기분</h3>${teacherMood?`<div class="teacherSummary">선생님 ${face(teacherMood.k)} ${teacherMood.t}</div>`:''}${groups.length?`<div class="mlist">${groups.map(g=>`<div>${face(g.md.k)}<span class="mt"><span>${g.md.t} ${g.ks.length}명</span><small>${g.ks.map(esc).join(', ')}</small></span></div>`).join('')}</div>`:`<p style="font-size:28px">${teacherMood?'학생은 아직 안 골랐어요':'아직 안 골랐어요'}</p>`}</div>
     </div>`;
-  lastSay=`오늘은 ${T.m}월 ${T.d}일 ${WD[T.w]}요일이에요. ${ws.length?weatherLine():''} 오늘 ${a}명이 왔어요. ${D.event?`오늘의 행사는 ${D.event}. `:''}${D.dismissal?`오늘은 ${DISMISS_SAY[D.dismissal]}에 하교해요. `:''}오늘도 힘차게 시작해요!`;
+  lastSay=`오늘은 ${T.m}월 ${T.d}일 ${WD[T.w]}요일이에요. ${ws.length?weatherLine():''} 오늘 ${a}명이 왔어요. ${D.event?`오늘의 행사는 ${D.event}. `:''}${dismissal?`오늘은 ${DISMISS_SAY[dismissal]}에 하교해요. `:''}오늘도 힘차게 시작해요!`;
 };
 
 /* ---------- 진행 ---------- */
 function isDone(id){const p=planToday(),ds=dishes(),here=S.kids.filter(k=>D.att[k]!=='out');
   return{date:D.dateOk.m&&D.dateOk.d,day:D.dayOk,weather:!!(D.weather.length&&D.feel),att:S.kids.length>0&&S.kids.every(k=>D.att[k]),
-  mood:here.length>0&&here.every(k=>D.mood[k]),plan:p.every((s,i)=>isLunch(s)||D.pick[i])&&(!p.length||!!D.dismissal),lunch:ds.length>0&&ds.every((_,i)=>D.dishes[i]),sum:false}[id]}
+  mood:here.length>0&&here.every(k=>D.mood[k]),plan:p.every((s,i)=>isLunch(s)||D.pick[i])&&(!p.length||!!validDismissal()),lunch:ds.length>0&&ds.every((_,i)=>D.dishes[i]),sum:false}[id]}
 function paintSteps(){$('#steps').innerHTML=steps.map((s,i)=>{const d=isDone(s.id)&&i!==cur;return `${i?'<span class="sep"></span>':''}<button class="chip ${i===cur?'now':''} ${d?'done':''}" data-i="${i}" ${i===cur?'aria-current="step"':''}><i>${d?'✓':i+1}</i>${s.label}</button>`}).join('')}
 function go(i,talk){cur=Math.max(0,Math.min(steps.length-1,i));const m=$('#main');m.innerHTML='';R[steps[cur].id](m);paintSteps();
   $('#prev').disabled=cur===0;$('#next').disabled=cur===steps.length-1;
@@ -1018,7 +1025,7 @@ $('#tBtn').onclick=()=>{
     const next=settingsFromForm();
     const planChanged=[1,2,3,4,5].some(w=>next.plan[w]!==S.plan[w]);
     const mealChanged=next.lunch!==S.lunch||next.mealMode!==S.mealMode||(next.school&&next.school.code)!==(S.school&&S.school.code);
-    if(planChanged)D.pick={};if(mealChanged){D.dishes={};D.writing={};lunchDate=null;mealByDate={}};saveDay();
+    if(planChanged){D.pick={};D.dismissal=null}if(mealChanged){D.dishes={};D.writing={};lunchDate=null;mealByDate={}};saveDay();
     S=Object.assign(S,next);
     store.set('morning:settings',S);close();applyS();loadMeal();
     toast(next.mealMode==='auto'&&!chosen?'저장했어요. 학교를 고르면 급식이 나와요':'저장했어요')};
