@@ -265,6 +265,11 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 .adv summary{cursor:pointer;color:var(--muted);font-weight:700;padding:4px 0}
 .adv .f{margin:8px 0 0}
 .pnote{font-size:15px;color:var(--muted);margin:0}
+.transferOverlay{position:absolute;inset:0;z-index:6;display:grid;place-items:center;background:rgba(30,41,68,.55)}
+.transferPanel{width:560px;max-width:calc(100% - 48px);padding:30px;border-radius:24px;background:var(--card);box-shadow:0 16px 48px rgba(30,41,68,.22)}
+.transferPanel h3{margin:0 0 16px;font:400 34px var(--display)}
+.transferPanel p{margin:0 0 12px;font-size:20px;line-height:1.5;word-break:keep-all}
+.transferPanel .transferActions{display:flex;justify-content:flex-end;gap:12px;margin-top:24px}
 .toast{position:absolute;left:50%;bottom:130px;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:22px;font-weight:700;padding:14px 28px;border-radius:20px;z-index:9;white-space:nowrap}
 
 /* 선생님용 시간표 입력 표 */
@@ -356,7 +361,7 @@ if(/^\d{7,10}$/.test(shared.get('school')||'')&&/^[A-Z][0-9]{2}$/.test(shared.ge
 const now=new Date();
 const T={y:now.getFullYear(),m:now.getMonth()+1,d:now.getDate(),w:now.getDay()};
 const dayKey='morning:day:'+T.y+'-'+T.m+'-'+T.d;
-const blankDay=()=>({att:{},mood:{},weather:null,feel:null,dateOk:{m:false,d:false},dayOk:false,pick:{},dishes:{}});
+const blankDay=()=>({att:{},mood:{},weather:null,feel:null,dateOk:{m:false,d:false},dayOk:false,pick:{},dishes:{},writing:{}});
 let D=Object.assign(blankDay(),store.get(dayKey,{}));if(!D.pick)D.pick={};if(!D.writing)D.writing={};
 function saveDay(){store.set(dayKey,D)}
 
@@ -727,9 +732,10 @@ $('#tBtn').onclick=()=>{
       </div>
       <div class="f" id="manBox" ${S.mealMode==='auto'?'hidden':''}><label for="sLunch">오늘 급식</label><small>한 줄에 한 가지(최대 12개). 알레르기 번호는 뒤에 (5.6.13)처럼 써요</small><textarea id="sLunch" style="min-height:230px">${esc(S.lunch)}</textarea></div>
       <p class="pnote">학교를 고르면 매일 날짜에 맞는 급식을 불러와요. 학생 이름과 활동 기록은 이 기기에만 저장돼요.</p>
+      <p class="pnote" id="transferMsg" role="status">다른 기기로 옮길 때는 설정 파일을 내보낸 뒤 가져오세요. 오늘 활동 기록은 파일에 담기지 않아요.</p>
     </div>
    </div>
-   <footer><button class="btn warn" id="rBtn">오늘 기록 지우기</button><button class="btn" id="dBtn">예시로 되돌리기</button><button class="btn main" id="okBtn">저장하고 닫기</button></footer></div>`;
+   <footer><button class="btn warn" id="rBtn">오늘 기록 지우기</button><button class="btn" id="dBtn">예시로 되돌리기</button><button class="btn" id="exportBtn">설정 내보내기</button><button class="btn" id="importBtn">설정 가져오기</button><input type="file" id="importFile" accept=".json,application/json" hidden><button class="btn main" id="okBtn">저장하고 닫기</button></footer></div>`;
   $('#editSchedule').onclick=()=>{
     const days=[1,2,3,4,5];
     const values=Object.fromEntries(days.map(w=>[w,splitList($('#sP'+w).value).slice(0,9)]));
@@ -780,6 +786,40 @@ $('#tBtn').onclick=()=>{
   };
   const close=()=>{sh.hidden=true;sh.innerHTML='';$('#tBtn').focus()};
   let chosen=S.school;
+  const settingsFromForm=()=>{
+    const kids=uniq($('#sKids').value.split('\n').map(x=>x.trim()).filter(Boolean)).slice(0,18);
+    const plan=Object.fromEntries([1,2,3,4,5].map(w=>[w,$('#sP'+w).value.trim()]));
+    const steps={sum:true};STEP_DEF.forEach(s=>{if(s.id!=='sum')steps[s.id]=$('#sS_'+s.id).checked});
+    const lunch=$('#sLunch').value.trim();
+    return{cls:$('#sCls').value.trim()||'우리 반',kids:kids.length?kids:['학생'],plan,planCheck:$('#sCheck').checked,lunch,steps,sample:S.sample&&lunch===DEFAULTS.lunch,mealMode:$('#sMealAuto').checked?'auto':'manual',school:chosen||null};
+  };
+  $('#exportBtn').onclick=()=>{
+    const data={format:'morning-board-settings',version:1,settings:settingsFromForm()};
+    const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'}));
+    const a=document.createElement('a');a.href=url;a.download='아침열기-설정.json';document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),60000);
+    $('#transferMsg').textContent='설정 파일을 저장했어요. 다른 기기에서 설정 가져오기를 눌러 주세요.';
+  };
+  $('#importBtn').onclick=()=>$('#importFile').click();
+  $('#importFile').onchange=async e=>{
+    const file=e.target.files[0];e.target.value='';if(!file)return;
+    const msg=$('#transferMsg');
+    if(file.size>65536){msg.textContent='설정 파일이 너무 커요. 내보낸 JSON 파일을 골라 주세요.';return}
+    let raw;
+    try{raw=JSON.parse(await file.text())}catch(err){msg.textContent='파일을 읽지 못했어요. 내보낸 JSON 파일을 골라 주세요.';return}
+    const v=raw&&raw.format==='morning-board-settings'&&raw.version===1&&raw.settings;
+    const valid=v&&typeof v==='object'&&!Array.isArray(v)&&typeof v.cls==='string'&&Array.isArray(v.kids)&&v.kids.length>0&&v.kids.length<=18&&v.kids.every(k=>typeof k==='string'&&k.trim()&&k.length<=50)&&v.plan&&typeof v.plan==='object'&&[1,2,3,4,5].every(w=>typeof v.plan[w]==='string'&&v.plan[w].length<=1000)&&typeof v.planCheck==='boolean'&&typeof v.lunch==='string'&&v.lunch.length<=2000&&['auto','manual'].includes(v.mealMode)&&v.steps&&typeof v.steps==='object'&&(!v.school||(/^\d{7,10}$/.test(v.school.code)&&/^[A-Z][0-9]{2}$/.test(v.school.office)&&typeof v.school.name==='string'));
+    if(!valid){msg.textContent='이 파일은 아침 열기 설정 파일이 아니에요.';return}
+    const next={cls:v.cls.trim().slice(0,12)||'우리 반',kids:uniq(v.kids.map(k=>k.trim())).slice(0,18),plan:Object.fromEntries([1,2,3,4,5].map(w=>[w,splitList(v.plan[w]).slice(0,9).map(s=>s.slice(0,24)).join(', ')])),planCheck:v.planCheck,lunch:v.lunch.trim(),mealMode:v.mealMode,school:v.school?{code:v.school.code,office:v.school.office,name:v.school.name.slice(0,80),addr:String(v.school.addr||'').slice(0,120)}:null,steps:Object.fromEntries(STEP_DEF.map(s=>[s.id,s.id==='sum'?true:v.steps[s.id]!==false])),sample:v.sample===true};
+    const overlay=document.createElement('div');overlay.className='transferOverlay';
+    overlay.innerHTML=`<div class="transferPanel" role="dialog" aria-modal="true" aria-label="설정 가져오기 확인"><h3>설정을 가져올까요?</h3><p><b>${esc(next.cls)}</b> · 학생 ${next.kids.length}명${next.school?` · ${esc(next.school.name)}`:''}</p><p>이 기기의 선생님 설정을 바꾸고, 오늘 활동 기록을 새로 시작해요.</p><p>가져온 학생 이름과 시간표는 이 기기에만 저장돼요.</p><div class="transferActions"><button class="btn" id="cancelImport">취소</button><button class="btn main" id="applyImport">설정 가져오기</button></div></div>`;
+    sh.appendChild(overlay);
+    const cancel=()=>{overlay.remove();$('#importBtn').focus()};
+    overlay.querySelector('#cancelImport').onclick=cancel;
+    overlay.querySelector('#applyImport').onclick=()=>{S=Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),next);store.set('morning:settings',S);D=blankDay();saveDay();chosen=S.school;close();applyS();loadMeal();toast('설정을 가져왔어요')};
+    overlay.onkeydown=ev=>{if(ev.key==='Escape'){ev.preventDefault();cancel()}};
+    overlay.querySelector('#applyImport').focus();
+  };
   sh.querySelectorAll('input[name=sMeal]').forEach(r=>r.onchange=()=>{const a=$('#sMealAuto').checked;$('#autoBox').hidden=!a;$('#manBox').hidden=a});
   const showCur=()=>{$('#curSchool').innerHTML=chosen?`<b>${esc(chosen.name)}</b><small>${esc(chosen.addr||'')}</small>`:'<small>아직 정하지 않았어요</small>'};
   const search=async()=>{const q=$('#sQ').value.trim(),msg=$('#reqMsg'),res=$('#reqRes');if(!q){$('#sQ').focus();return}
@@ -799,18 +839,13 @@ $('#tBtn').onclick=()=>{
     D=blankDay();saveDay();sel=null;slotSel=null;close();go(0,false);toast('오늘 기록을 지웠어요')};
   $('#dBtn').onclick=()=>{S=JSON.parse(JSON.stringify(DEFAULTS));store.set('morning:settings',S);close();applyS(true);toast('예시 설정으로 되돌렸어요')};
   $('#okBtn').onclick=()=>{
-    const kids=uniq($('#sKids').value.split('\n').map(x=>x.trim()).filter(Boolean)).slice(0,18);
-    const plan={};let planChanged=false;[1,2,3,4,5].forEach(w=>{plan[w]=$('#sP'+w).value.trim();if(plan[w]!==S.plan[w])planChanged=true});
-    const st={sum:true};STEP_DEF.forEach(s=>{if(s.id!=='sum')st[s.id]=$('#sS_'+s.id).checked});
-    const lunch=$('#sLunch').value.trim();
-    const mealMode=$('#sMealAuto').checked?'auto':'manual';
-    const mealChanged=lunch!==S.lunch||mealMode!==S.mealMode||(chosen&&chosen.code)!==(S.school&&S.school.code);
+    const next=settingsFromForm();
+    const planChanged=[1,2,3,4,5].some(w=>next.plan[w]!==S.plan[w]);
+    const mealChanged=next.lunch!==S.lunch||next.mealMode!==S.mealMode||(next.school&&next.school.code)!==(S.school&&S.school.code);
     if(planChanged)D.pick={};if(mealChanged){D.dishes={};D.writing={}};saveDay();
-    S=Object.assign(S,{cls:$('#sCls').value.trim()||'우리 반',kids:kids.length?kids:['학생'],plan,
-      planCheck:$('#sCheck').checked,lunch,steps:st,sample:S.sample&&lunch===DEFAULTS.lunch,mealMode,school:chosen||null,
-});
+    S=Object.assign(S,next);
     store.set('morning:settings',S);close();applyS();loadMeal();
-    toast(mealMode==='auto'&&!chosen?'저장했어요. 학교를 고르면 급식이 나와요':'저장했어요')};
+    toast(next.mealMode==='auto'&&!chosen?'저장했어요. 학교를 고르면 급식이 나와요':'저장했어요')};
   setTimeout(()=>$('#sCls').focus(),50);
 };
 function refreshLunch(){if(!steps.length)return;paintSteps();if(steps[cur]&&(steps[cur].id==='lunch'||steps[cur].id==='sum')&&$('#sheet').hidden)go(cur,false)}
