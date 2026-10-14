@@ -224,6 +224,7 @@ main:has(.eventRow){overflow-y:auto}
 
 /* 정리 */
 .sum{display:grid;grid-template-columns:360px 1fr 340px;gap:16px;margin-top:16px;flex:1;min-height:0}
+.sum.hasEvent{grid-template-rows:minmax(0,1fr) 100px}
 .box{background:var(--card);border-radius:22px;padding:16px 22px;border:3px solid var(--line);min-width:0;overflow:hidden}
 .box h3{margin:0 0 6px;font-size:19px;color:var(--muted);font-weight:700;letter-spacing:.02em}
 .box p{margin:0;font-family:var(--display);font-size:34px;line-height:1.2}
@@ -234,6 +235,17 @@ main:has(.eventRow){overflow-y:auto}
 .big p.cheer{font-family:var(--display);font-size:34px;color:var(--sun);line-height:1.2}
 .big .homeTime{color:#fff;font-size:31px}
 .mid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:124px minmax(0,1fr) 120px;gap:16px;min-height:0}
+.sum.hasEvent .mid{grid-template-rows:74px minmax(0,1fr) 72px;gap:8px}
+.sum.hasEvent .mid>.box{padding:8px 12px}
+.sum.hasEvent .mid .wx svg{width:34px;height:34px}
+.sum.hasEvent .mid .box p{font-size:28px}
+.sum.hasEvent .big p{font-size:49px}
+.sum.hasEvent .big p.cheer{font-size:30px}
+.eventReview{grid-column:1/-1;display:flex;align-items:center;gap:18px;padding:10px 18px}
+.eventReview h3{margin:0;flex:0 0 130px;color:var(--ink);font-size:22px;font-weight:900}
+.eventReviewContent{flex:1;min-width:0;height:100%;display:flex;align-items:center;border:2px solid var(--line);border-radius:15px;background:#fff;overflow:hidden}
+.eventReviewContent img{display:block;width:100%;height:100%;object-fit:contain;object-position:left center}
+.eventReviewContent p{padding:0 18px;font-size:36px;line-height:1.15;overflow-wrap:anywhere}
 .mid .wide{grid-column:span 2}
 .mid .box:last-child{padding:11px 18px}
 .mid .box:last-child p.two{font-size:25px;line-height:1.15;-webkit-line-clamp:2}
@@ -374,6 +386,8 @@ main:has(.eventRow){overflow-y:auto}
   .tray{grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-auto-rows:minmax(125px,auto)!important;gap:9px}.dish{padding:8px;gap:6px}.dish svg{width:55px;height:55px}.dish b{font-size:clamp(18px,2.5vw,25px)!important}.al span{font-size:12px!important}
   .mealWeek{gap:7px}.mealDay{height:72px;padding:7px}.mealDay strong{font-size:21px}.mealDay small{font-size:13px}
   .sum{grid-template-columns:minmax(0,1fr);gap:12px}.big{min-height:160px;flex-direction:row;align-items:center}.big p{font-size:36px}.big p.cheer{font-size:27px;text-align:right}
+  .sum.hasEvent{grid-template-rows:none}.sum.hasEvent .big p{font-size:36px}.sum.hasEvent .big p.cheer{font-size:27px}.sum.hasEvent .mid{grid-template-rows:110px minmax(180px,auto) 110px;gap:12px}
+  .eventReview{min-height:120px}.eventReview h3{flex-basis:115px;font-size:20px}
   .mid{grid-template-rows:110px minmax(180px,auto) 110px;gap:12px}.box{padding:13px 16px}.sum>.box:last-child{max-height:250px}.lessonList{grid-auto-rows:minmax(42px,auto)}
   .bot{position:relative;z-index:3;flex-wrap:wrap;padding:10px 16px;gap:8px}.steps{order:3;flex:0 0 100%;justify-content:flex-start;overflow-x:auto}.chip{font-size:18px;height:40px;padding:0 8px 0 3px}.chip i{width:26px;height:26px;flex-basis:26px;font-size:15px}.nav{height:48px;font-size:24px;padding:0 14px}.nav.next{margin-left:auto}.nav svg{width:21px;height:21px}
   .sheet,.schedOverlay,.transferOverlay,.writingOverlay{position:fixed;inset:0;overflow:auto;padding:12px;box-sizing:border-box}
@@ -396,6 +410,7 @@ main:has(.eventRow){overflow-y:auto}
   .tray{grid-template-columns:repeat(2,minmax(0,1fr))!important}.dish{min-height:100px}.dish svg{width:40px;height:40px}
   .mealWeek{grid-template-columns:repeat(3,minmax(0,1fr))}.mealDay{height:69px}.mealDay strong{font-size:17px}
   .mid{grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto}.mid>.box:nth-child(-n+2){min-height:120px;box-sizing:border-box}.mid .wx{font-size:18px}.mid .wx svg{width:35px;height:35px}.mid>.box:nth-child(2) p{font-size:27px}.sum>.box:last-child{max-height:none;overflow:visible}.lessonList{grid-template-columns:repeat(2,minmax(0,1fr))}.lesson{font-size:18px}.lesson b{font-size:13px}
+  .sum.hasEvent .mid{grid-template-rows:auto auto auto}.eventReview{display:block;padding:12px}.eventReview h3{margin-bottom:8px}.eventReviewContent{height:95px}.eventReviewContent p{font-size:27px}
   .pbody{grid-template-columns:1fr}.panel footer .btn{height:43px;padding:0 12px;font-size:15px}.panel header h2{font-size:28px}
   .writingHead h2{font-size:29px}.writingActions{flex-wrap:wrap}.writingActions button{font-size:15px}
 }
@@ -742,7 +757,7 @@ function bindEventEditor(){
   const addPoint=e=>{const r=canvas.getBoundingClientRect(),point=[Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))];const prev=active[active.length-1];if(!prev||Math.hypot(point[0]-prev[0],point[1]-prev[1])>.004){active.push(point);renderInk()}};
   canvas.onpointerdown=e=>{e.preventDefault();canvas.setPointerCapture(e.pointerId);active=[];paths.push(active);addPoint(e);updateGuide()};
   canvas.onpointermove=e=>{if(active){e.preventDefault();addPoint(e)}};
-  const finish=()=>{if(!active)return;D.eventWriting={name:D.event,paths};saveDay();active=null};
+  const finish=()=>{if(!active)return;D.eventWriting={name:D.event,paths,ratio:canvas.clientWidth/canvas.clientHeight};saveDay();active=null};
   canvas.onpointerup=finish;canvas.onpointercancel=finish;
   input.oninput=e=>{D.event=e.target.value.slice(0,100);D.eventWriting.name=D.event;saveDay();updateGuide()};
   toggle.onclick=()=>{const typing=input.hidden;input.hidden=!typing;canvas.hidden=typing;updateGuide();toggle.textContent=typing?'손글씨로 돌아가기':'글자 입력';if(typing)input.focus();else{requestAnimationFrame(sizeCanvas);canvas.focus()}};
@@ -846,16 +861,27 @@ R.lunch=m=>{
   lastSay=weekly&&!selected?'오늘 날짜를 선택해요.':(weekly?`${selected.month}월 ${selected.day}일 점심은 `:'오늘 점심은 ')+ds.map(x=>x.name).join(', ')+(ds.length?'이에요.':'');
   if(weekly)loadWeekMeals();
 };
+function eventInkImage(writing){
+  const paths=writing?.paths||[];
+  if(!paths.some(path=>path.length))return null;
+  const ratio=Math.max(2,Math.min(16,Number(writing.ratio)||(innerWidth<=600?3.3:10)));
+  const canvas=document.createElement('canvas');canvas.height=120;canvas.width=Math.round(120*ratio);
+  const ctx=canvas.getContext('2d');ctx.strokeStyle='#1E2944';ctx.fillStyle='#1E2944';ctx.lineWidth=8;ctx.lineCap='round';ctx.lineJoin='round';
+  paths.forEach(path=>{if(!path.length)return;if(path.length===1){ctx.beginPath();ctx.arc(path[0][0]*canvas.width,path[0][1]*canvas.height,4,0,Math.PI*2);ctx.fill();return}
+    ctx.beginPath();path.forEach(([x,y],i)=>i?ctx.lineTo(x*canvas.width,y*canvas.height):ctx.moveTo(x*canvas.width,y*canvas.height));ctx.stroke()});
+  return canvas.toDataURL('image/png');
+}
 R.sum=m=>{
   const a=S.kids.filter(k=>D.att[k]==='in').length,ds=dishes();
   const dismissal=validDismissal();
+  const eventText=D.event.trim(),eventImage=eventText?null:eventInkImage(D.eventWriting),hasEvent=!!(eventText||eventImage);
   let period=0;
   const learned=planToday().map((s,i)=>{if(isLunch(s))return null;period++;return{period,subject:D.pick[i]||s,chosen:!!D.pick[i]}}).filter(Boolean);
   const ws=WEATHER.filter(x=>D.weather.includes(x.k)),f=FEEL.find(x=>x.k===D.feel),teacherMood=MOODS.find(x=>x.k===D.teacherMood);
   const groups=MOODS.map(md=>({md,ks:S.kids.filter(k=>D.mood[k]===md.k)})).filter(g=>g.ks.length);
   m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘 아침을 정리해요</h1></div></div>
-    <div class="sum">
-      <div class="box big"><div><h3>오늘은</h3><p>${T.y}년<br>${T.m}월 ${T.d}일<br><span style="color:${T.w===0?'#FF9DB4':T.w===6?'#9CCBFF':'#FFFFFF'}">${WD[T.w]}요일</span></p>${D.event?`<div class="eventSummary"><b>오늘의 행사</b>${esc(D.event)}</div>`:''}</div>
+    <div class="sum ${hasEvent?'hasEvent':''}">
+      <div class="box big"><div><h3>오늘은</h3><p>${T.y}년<br>${T.m}월 ${T.d}일<br><span style="color:${T.w===0?'#FF9DB4':T.w===6?'#9CCBFF':'#FFFFFF'}">${WD[T.w]}요일</span></p></div>
         <p class="cheer">${dismissal?`<span class="homeTime">하교 ${DISMISS[dismissal]}</span><br>`:''}오늘도 힘차게<br>시작해요!</p></div>
       <div class="mid">
         <div class="box"><h3>날씨</h3><p class="wx">${ws.length?wIcon(ws[0].k)+`<span>${ws.map(x=>x.n).join(' · ')}${f?' · '+f.t:''}</span>`:'아직 안 골랐어요'}</p></div>
@@ -864,6 +890,7 @@ R.sum=m=>{
         <div class="box wide"><h3>점심</h3><p class="two">${ds.length?ds.slice(0,3).map(x=>esc(x.name)).join(' · ')+(ds.length>3?` <span style="color:var(--muted)">외 ${ds.length-3}가지</span>`:''):'없음'}</p></div>
       </div>
       <div class="box"><h3>우리 반 기분</h3>${teacherMood?`<div class="teacherSummary">선생님 ${face(teacherMood.k)} ${teacherMood.t}</div>`:''}${groups.length?`<div class="mlist">${groups.map(g=>`<div>${face(g.md.k)}<span class="mt"><span>${g.md.t} ${g.ks.length}명</span><small>${g.ks.map(esc).join(', ')}</small></span></div>`).join('')}</div>`:`<p style="font-size:28px">${teacherMood?'학생은 아직 안 골랐어요':'아직 안 골랐어요'}</p>`}</div>
+      ${hasEvent?`<div class="box eventReview"><h3>오늘의 행사</h3><div class="eventReviewContent">${eventText?`<p>${esc(eventText)}</p>`:`<img src="${eventImage}" alt="오늘의 행사 손글씨">`}</div></div>`:''}
     </div>`;
   lastSay=`오늘은 ${T.m}월 ${T.d}일 ${WD[T.w]}요일이에요. ${ws.length?weatherLine():''} 오늘 ${a}명이 왔어요. ${D.event?`오늘의 행사는 ${D.event}. `:''}${dismissal?`오늘은 ${DISMISS_SAY[dismissal]}에 하교해요. `:''}오늘도 힘차게 시작해요!`;
 };
