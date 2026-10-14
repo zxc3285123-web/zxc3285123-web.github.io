@@ -71,7 +71,14 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 .choice.pick{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 6px 0 var(--accent)}
 
 /* 날짜 */
-.dateWrap{display:grid;grid-template-columns:400px 1fr;gap:56px;height:100%;align-items:center}
+.dateWrap{display:grid;grid-template-columns:390px 350px minmax(0,1fr);gap:18px;height:100%;align-items:center}
+.monthCalendar{background:#fff;border:3px solid #DCE6DD;border-radius:26px;padding:20px;box-shadow:0 8px 0 #D5DED6;box-sizing:border-box}
+.monthCalendar h2{font:400 35px var(--display);margin:0 0 8px;text-align:center}
+.calendarGrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;text-align:center}
+.calendarGrid span{display:grid;place-items:center;min-height:40px;font-size:20px;font-weight:700;border-radius:10px}
+.calendarGrid .weekName{color:var(--muted);font-size:16px;min-height:30px}
+.calendarGrid .sunday{color:var(--berry)}.calendarGrid .saturday{color:var(--sky)}
+.calendarGrid .calendarToday{background:var(--leaf-soft);outline:3px solid var(--leaf);outline-offset:-3px}
 .ilryeok{background:var(--card);border-radius:20px;box-shadow:0 10px 0 var(--line);overflow:hidden;text-align:center;position:relative}
 .ilryeok .rings{position:absolute;top:-10px;left:0;right:0;display:flex;justify-content:space-around;padding:0 70px}
 .ilryeok .rings span{width:22px;height:38px;border-radius:11px;background:var(--ink)}
@@ -83,14 +90,14 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 .row3{display:flex;gap:24px}
 .row3 .choice{width:230px;height:170px;font-size:76px}
 .qtag{display:inline-block;font-size:22px;font-weight:700;background:var(--accent-soft);color:#AE4D1F;padding:6px 16px;border-radius:14px;margin-bottom:14px}
-.dateWrap{grid-template-columns:400px 1fr;gap:42px}
+.dateWrap{gap:18px}
 .dateWrap .ilryeok{border:3px solid #E5D9DC;border-radius:30px;box-shadow:0 12px 0 #D5DED6}
 .dateWrap .ilryeok .head{background:linear-gradient(120deg,#DE4870,#F2746B)}
 .dateWrap .ilryeok .wd{color:var(--leaf)}
-.dateQ{gap:26px;padding:34px 36px;background:#fff;border:3px solid #DCE6DD;border-radius:30px;box-shadow:0 10px 0 #D5DED6}
-.dateQ .q{font-size:52px}
+.dateQ{gap:20px;padding:26px 24px;background:#fff;border:3px solid #DCE6DD;border-radius:30px;box-shadow:0 10px 0 #D5DED6}
+.dateQ .q{font-size:40px;white-space:normal}
 .dateQ .row3{gap:16px}
-.dateQ .row3 .choice{flex:1;min-width:0;width:auto;height:154px;font-size:68px;border-radius:24px}
+.dateQ .row3 .choice{flex:1;min-width:0;width:auto;height:120px;font-size:48px;border-radius:24px}
 .dateQ .say{min-height:50px}
 
 /* 요일 */
@@ -165,6 +172,13 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 .dismiss button{height:52px;flex:1;min-width:0;padding:0 8px;border:3px solid var(--line);border-radius:15px;background:var(--card);font-size:19px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px}
 .dismiss button span:last-child{font-variant-numeric:tabular-nums}
 .dismiss button.pick{border-color:var(--accent);background:var(--accent-soft);color:#8E3E17}
+.eventRow{display:flex;align-items:center;gap:14px;margin-top:12px;flex-shrink:0}
+.eventRow label{font-size:21px;font-weight:900;white-space:nowrap}
+.eventRow input{box-sizing:border-box;flex:1;min-width:0;height:54px;padding:0 16px;border:3px solid var(--line);border-radius:15px;background:#fff;color:var(--ink);font:700 21px var(--body)}
+.eventRow input::placeholder{color:var(--muted);font-weight:500}
+.eventSummary{margin:16px 0;font-size:23px;line-height:1.35;overflow-wrap:anywhere}
+.eventSummary b{display:block;color:#BFE8CE;font-size:18px}
+.tool.fullscreen{width:52px;padding:0;justify-content:center}.tool.fullscreen svg{width:26px;height:26px}
 .rest{margin-top:60px;font-family:var(--display);font-size:56px;text-align:center}
 
 /* 급식 */
@@ -229,6 +243,8 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 .mlist svg{width:46px;height:46px;flex-shrink:0}
 .mlist .mt{display:flex;flex-direction:column;min-width:0;line-height:1.15}
 .mlist small{font-family:var(--body);font-size:14px;color:var(--muted);font-weight:500;line-height:1.3;word-break:keep-all}
+.teacherSummary{display:flex;align-items:center;gap:8px;margin:6px 0 12px;padding:7px 9px;border-radius:13px;background:var(--leaf-soft);font-family:var(--display);font-size:23px}
+.teacherSummary svg{width:40px;height:40px;flex-shrink:0}
 
 /* 아래 */
 .bot{display:flex;align-items:center;gap:12px;padding:0 28px;border-top:3px solid var(--line);background:var(--card)}
@@ -328,7 +344,7 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
   .qrow{min-height:0;flex-wrap:wrap;gap:10px}.q{font-size:clamp(29px,4vw,42px);white-space:normal}.sub{font-size:17px;line-height:1.45}
   .say{font-size:28px;min-height:32px}.qrow .say{flex:0 1 auto;white-space:normal;text-align:left}
   main:has(.dateWrap){justify-content:center}
-  .dateWrap{grid-template-columns:minmax(200px,31%) minmax(0,1fr);gap:20px;align-items:stretch;min-height:350px;height:auto}
+  .dateWrap{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch;min-height:350px;height:auto}.dateQ{grid-column:1/-1}.monthCalendar{padding:14px}.monthCalendar h2{font-size:28px}.calendarGrid span{min-height:32px;font-size:16px}
   .ilryeok .head{font-size:27px;padding:32px 0 10px}.ilryeok .num{font-size:130px}.ilryeok .wd{font-size:27px}
   .dateQ{padding:20px;gap:18px;justify-content:center}.dateQ .q{font-size:clamp(28px,3.7vw,38px)}.dateQ .row3{gap:8px}.dateQ .row3 .choice{height:100px;font-size:clamp(30px,4vw,42px)}.qtag{font-size:16px;margin-bottom:8px}
   .week{gap:8px;margin-top:20px}.week .choice{height:140px;font-size:58px;border-radius:18px}.week .choice small{font-size:15px}
@@ -357,7 +373,9 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 @media (max-width:600px){
   .top{padding:10px 12px}.brand b{font-size:24px}.clock{font-size:23px}.today{order:2}.tools{order:3;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));width:100%;flex:none;gap:6px}.tool{font-size:13px;height:38px;justify-content:center;padding:0 3px}.tool:nth-child(n){grid-column:span 2}
   main{padding:18px 12px 24px;min-height:0}.q{font-size:30px}.sub{font-size:15px}.qrow .say{font-size:22px}
-  .dateWrap{grid-template-columns:1fr;gap:14px}.ilryeok{max-width:260px;width:100%;margin:auto}.ilryeok .head{padding:27px 0 7px}.ilryeok .num{font-size:100px;line-height:1}.ilryeok .wd{padding-bottom:12px}.dateQ{padding:16px}.dateQ .row3 .choice{height:84px;font-size:32px}
+  .dateWrap{grid-template-columns:1fr;gap:14px}.monthCalendar{max-width:390px;width:100%;margin:auto}.ilryeok{max-width:260px;width:100%;margin:auto}.ilryeok .head{padding:27px 0 7px}.ilryeok .num{font-size:100px;line-height:1}.ilryeok .wd{padding-bottom:12px}.dateQ{grid-column:auto;padding:16px}.dateQ .row3 .choice{height:84px;font-size:32px}
+  .eventRow{align-items:stretch;flex-direction:column;gap:6px}.eventRow label{font-size:18px}.eventRow input{flex:none;width:100%;font-size:18px}
+  .tool.fullscreen{width:auto;min-width:0}
   .week{grid-template-columns:repeat(4,minmax(0,1fr))}.week .choice{height:105px;font-size:43px}.week .choice small{font-size:13px}
   .wGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.wGrid .choice{height:120px;font-size:19px}.wGrid svg{width:60px;height:60px}.fGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .mFaces{grid-template-columns:repeat(2,1fr)}.mFaces .choice:last-child:nth-child(3n + 1){grid-column:auto}.mFaces .choice:last-child:nth-child(2n + 1){grid-column:1/-1;width:calc(50% - 4px);justify-self:center}.slots{grid-template-columns:repeat(3,minmax(0,1fr))}.pal{grid-template-columns:repeat(2,minmax(0,1fr))!important}
@@ -381,9 +399,9 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
       <button class="tool home" id="homeBtn" title="첫 화면으로 이동해요. 오늘 기록은 남아요.">처음으로</button>
       <button class="tool reset" id="resetBtn">오늘 다시 시작</button>
       <button class="tool listen" id="voiceBtn" type="button" aria-pressed="true">음성 켜짐</button>
-      <button class="tool" id="fsBtn">전체 화면</button>
       <button class="tool" id="shareBtn">공유</button>
       <button class="tool" id="tBtn">선생님</button>
+      <button class="tool fullscreen" id="fsBtn" type="button" aria-label="전체 화면" title="전체 화면"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 4H4v8M20 4h8v8M4 20v8h8M28 20v8h-8"/></svg></button>
     </div>
   </header>
   <main id="main"></main>
@@ -438,8 +456,10 @@ if(/^\d{7,10}$/.test(shared.get('school')||'')&&/^[A-Z][0-9]{2}$/.test(shared.ge
 const now=new Date();
 const T={y:now.getFullYear(),m:now.getMonth()+1,d:now.getDate(),w:now.getDay()};
 const dayKey='morning:day:'+T.y+'-'+T.m+'-'+T.d;
-const blankDay=()=>({att:{},mood:{},weather:null,feel:null,dateOk:{m:false,d:false},dayOk:false,pick:{},dismissal:null,dishes:{},writing:{}});
+const blankDay=()=>({att:{},mood:{},teacherMood:null,weather:[],feel:null,dateOk:{m:false,d:false},dayOk:false,pick:{},dismissal:null,event:'',dishes:{},writing:{}});
 let D=Object.assign(blankDay(),store.get(dayKey,{}));if(!D.pick)D.pick={};if(!D.writing)D.writing={};
+if(!Array.isArray(D.weather))D.weather=D.weather?[D.weather]:[];
+if(typeof D.event!=='string')D.event='';
 if(![5,6,7].includes(D.dismissal))D.dismissal=null;
 function saveDay(){store.set(dayKey,D)}
 
@@ -526,7 +546,7 @@ const DISMISS={5:'13:50',6:'14:40',7:'15:30'};
 const DISMISS_SAY={5:'오후 1시 50분',6:'오후 2시 40분',7:'오후 3시 30분'};
 const ymd=`${T.y}${String(T.m).padStart(2,'0')}${String(T.d).padStart(2,'0')}`;
 const weekDates=(()=>{const monday=new Date(T.y,T.m-1,T.d);monday.setDate(monday.getDate()-((T.w+6)%7));return Array.from({length:5},(_,i)=>{const d=new Date(monday);d.setDate(monday.getDate()+i);return{key:`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`,month:d.getMonth()+1,day:d.getDate(),weekday:i+1}})})();
-let lunchDate=T.w>=1&&T.w<=5?ymd:weekDates[0].key;
+let lunchDate=null;
 /* 나이스 메뉴 이름 정리: 별표·# 표시와 (안)(J)(고) 같은 짧은 표시 지우기 */
 const cleanNeis=l=>String(l).replace(/[#*]/g,'').replace(/\((?![\d.,\s]+\))[^)]{1,2}\)/g,'').replace(/[@-].*$/,'').replace(/\s{2,}/g,' ').trim();
 /* 나이스 교육정보 개방 포털 Open API */
@@ -580,7 +600,10 @@ function markGood(box,good,opts){[...box.children].forEach((x,i)=>x.classList.ad
 const R={};
 R.date=m=>{
   const mm=D.dateOk.m,dd=D.dateOk.d;
+  const firstWeekday=new Date(T.y,T.m-1,1).getDay(),lastDay=new Date(T.y,T.m,0).getDate();
+  const calendarDays=Array.from({length:firstWeekday+lastDay},(_,i)=>{const day=i-firstWeekday+1,wd=i%7;return `<span class="${day===T.d?'calendarToday':''} ${wd===0?'sunday':wd===6?'saturday':''}" ${day===T.d?'aria-label="오늘 '+T.d+'일"':''}>${day>0?day:''}</span>`}).join('');
   m.innerHTML=`<div class="dateWrap">
+    <div class="monthCalendar" aria-label="${T.y}년 ${T.m}월 달력"><h2>${T.y}년 ${T.m}월</h2><div class="calendarGrid">${WD.map((w,i)=>`<span class="weekName ${i===0?'sunday':i===6?'saturday':''}">${w}</span>`).join('')}${calendarDays}</div></div>
     <div class="ilryeok"><div class="rings"><span></span><span></span></div>
       <div class="head" id="ilM">${T.y}년 ${mm?T.m+'월':'<span style="opacity:.6">?월</span>'}</div>
       <div class="num ${dd?'':'unk'}" id="ilD">${dd?T.d:'?'}</div>
@@ -619,20 +642,19 @@ R.day=m=>{
 };
 const WEATHER=[{k:'sunny',t:'맑아요',c:'맑고',n:'맑음'},{k:'partly',t:'구름이 조금 있어요',c:'구름이 조금 있고',n:'구름 조금'},{k:'cloudy',t:'흐려요',c:'흐리고',n:'흐림'},{k:'rain',t:'비가 와요',c:'비가 오고',n:'비'},{k:'snow',t:'눈이 와요',c:'눈이 오고',n:'눈'},{k:'wind',t:'바람이 불어요',c:'바람이 불고',n:'바람'}];
 const FEEL=[{k:'hot',t:'더워요',c:'#DE4870',h:90},{k:'warm',t:'따뜻해요',c:'#F2732B',h:65},{k:'cool',t:'시원해요',c:'#2E9B66',h:40},{k:'cold',t:'추워요',c:'#3F8FDE',h:18}];
-function weatherLine(){const w=WEATHER.find(x=>x.k===D.weather),f=FEEL.find(x=>x.k===D.feel);if(!w)return'';
-  if(!f)return '오늘은 '+w.t+'.';
-  const tip=D.weather==='rain'?'우산을 챙겨요.':D.weather==='snow'?'미끄러우니 천천히 걸어요.':f.k==='cold'?'겉옷을 꼭 입어요.':f.k==='hot'?'물을 자주 마셔요.':'밖에서 걷기 좋은 날이에요.';
-  return `오늘은 ${w.c} ${f.t}. ${tip}`}
+function weatherLine(){const ws=WEATHER.filter(x=>D.weather.includes(x.k)),f=FEEL.find(x=>x.k===D.feel);if(!ws.length)return'';
+  const tip=D.weather.includes('rain')?'우산을 챙겨요.':D.weather.includes('snow')?'미끄러우니 천천히 걸어요.':f?.k==='cold'?'겉옷을 꼭 입어요.':f?.k==='hot'?'물을 자주 마셔요.':'';
+  return `오늘 날씨는 ${ws.map(x=>x.n).join(', ')}${f?'이고 '+f.t:'이에요'}. ${tip}`.trim()}
 R.weather=m=>{
-  m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘 날씨는 어때요?</h1><p class="sub">창밖을 보고 날씨를 고르고, 몸으로 느끼는 것도 골라요</p></div></div>
-    <div class="wGrid" id="w">${WEATHER.map(w=>`<button class="choice ${D.weather===w.k?'pick':''}" data-k="${w.k}">${wIcon(w.k)}<span>${w.n}</span></button>`).join('')}</div>
+  m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘 날씨는 어때요?</h1><p class="sub">날씨는 여러 개 고를 수 있어요. 몸으로 느끼는 것도 골라요.</p></div></div>
+    <div class="wGrid" id="w">${WEATHER.map(w=>`<button class="choice ${D.weather.includes(w.k)?'pick':''}" data-k="${w.k}" aria-pressed="${D.weather.includes(w.k)}">${wIcon(w.k)}<span>${w.n}</span></button>`).join('')}</div>
     <div class="fGrid" id="f">${FEEL.map(f=>`<button class="choice ${D.feel===f.k?'pick':''}" data-k="${f.k}"><span class="therm"><b style="height:${f.h}%;background:${f.c}"></b></span>${f.t}</button>`).join('')}</div>
-    <div class="say wSay" id="say">${D.weather?weatherLine():''}</div>`;
+    <div class="say wSay" id="say">${D.weather.length?weatherLine():''}</div>`;
   const say=$('#say');
-  const upd=()=>{if(D.weather&&D.feel){const l=weatherLine();setSay(say,l);speak(l)}else if(D.weather){const w=WEATHER.find(x=>x.k===D.weather);const l=w.t+'. 몸으로 느끼면 어때요?';setSay(say,l);speak(l)}else{const l=`${FEEL.find(x=>x.k===D.feel)?.t||''} 창밖 날씨도 골라요.`;setSay(say,l);speak(l)}paintSteps()};
-  $('#w').onclick=e=>{const b=e.target.closest('.choice');if(!b)return;D.weather=b.dataset.k;saveDay();[...$('#w').children].forEach(x=>x.classList.toggle('pick',x===b));tone(true);upd()};
+  const upd=()=>{if(D.weather.length){const l=weatherLine();setSay(say,l);speak(l)}else{const l=D.feel?`${FEEL.find(x=>x.k===D.feel)?.t} 날씨도 골라요.`:'날씨를 골라요.';setSay(say,l);speak(l)}paintSteps()};
+  $('#w').onclick=e=>{const b=e.target.closest('.choice');if(!b)return;const k=b.dataset.k;D.weather=D.weather.includes(k)?D.weather.filter(x=>x!==k):[...D.weather,k];saveDay();b.classList.toggle('pick',D.weather.includes(k));b.setAttribute('aria-pressed',String(D.weather.includes(k)));tone(true);upd()};
   $('#f').onclick=e=>{const b=e.target.closest('.choice');if(!b)return;D.feel=b.dataset.k;saveDay();[...$('#f').children].forEach(x=>x.classList.toggle('pick',x===b));tone(true);upd()};
-  lastSay=D.weather&&D.feel?weatherLine():'오늘 날씨는 어때요? 창밖을 보고 골라요.';
+  lastSay=D.weather.length&&D.feel?weatherLine():'오늘 날씨는 어때요? 여러 개 골라도 돼요.';
 };
 R.att=m=>{
   const n=S.kids.length,cols=n<=4?n:n<=6?3:n<=8?4:n<=10?5:6,rows=Math.ceil(n/cols);
@@ -652,12 +674,13 @@ R.att=m=>{
   lastSay=`출석을 불러요. 오늘 ${cnt()}명 왔어요.`;
 };
 R.mood=m=>{
-  const list=S.kids.filter(k=>D.att[k]!=='out');
-  if(sel&&!list.includes(sel))sel=null;
-  if(!sel)sel=list.find(k=>!D.mood[k])||null;
+  const list=[{id:'teacher',label:'선생님',teacher:true},...S.kids.filter(k=>D.att[k]!=='out').map((k,i)=>({id:'kid'+i,label:k,teacher:false}))];
+  const moodOf=x=>x.teacher?D.teacherMood:D.mood[x.label];
+  if(sel&&!list.some(x=>x.id===sel))sel=null;
+  if(!sel)sel=(list.find(x=>!moodOf(x))||list[0]).id;
   const n=Math.max(list.length,1),cols=n<=6?Math.max(n,3):n<=12?Math.ceil(n/2):6,rows=Math.ceil(n/cols);
   const H=330,G=12,ch=(H-(rows-1)*G)/rows,cw=(MAIN_W-(cols-1)*G)/cols;
-  const maxLen=Math.max(...list.map(k=>k.length),2);
+  const maxLen=Math.max(...list.map(x=>x.label.length),2);
   const vert=rows===1||ch>=150;
   let fs,nf,wf;
   if(vert){fs=Math.floor(Math.min(ch-104,cw-40,210));nf=Math.floor(Math.min(42,(cw-24)/maxLen));wf=Math.min(24,nf*.6)}
@@ -666,21 +689,21 @@ R.mood=m=>{
     <div class="mBoard" id="who" style="grid-template-columns:repeat(${cols},1fr);grid-template-rows:repeat(${rows},1fr)"></div>
     <div class="mFaces" id="faces">${MOODS.map(x=>`<button class="choice" data-k="${x.k}">${face(x.k)}<span>${x.t}</span></button>`).join('')}</div>`;
   const drawWho=()=>{
-    $('#who').innerHTML=list.length?list.map((k,i)=>{const md=MOODS.find(x=>x.k===D.mood[k]);
-      return `<button class="mk ${vert?'v':''} ${k===sel?'sel':''}" data-i="${i}"><span class="fc ${md?'':'empty'}" style="width:${fs}px;height:${fs}px;font-size:${fs*.45}px">${md?face(md.k):'?'}</span><span class="tx"><span class="nm" style="font-size:${nf}px">${esc(k)}</span><span class="mw" style="font-size:${wf}px">${md?md.t:'골라요'}</span></span></button>`}).join('')
+    $('#who').innerHTML=list.length?list.map((x,i)=>{const md=MOODS.find(y=>y.k===moodOf(x));
+      return `<button class="mk ${vert?'v':''} ${x.id===sel?'sel':''}" data-i="${i}"><span class="fc ${md?'':'empty'}" style="width:${fs}px;height:${fs}px;font-size:${fs*.45}px">${md?face(md.k):'?'}</span><span class="tx"><span class="nm" style="font-size:${nf}px">${esc(x.label)}</span><span class="mw" style="font-size:${wf}px">${md?md.t:'골라요'}</span></span></button>`}).join('')
       :'<p class="sub">출석한 친구가 없어요. 출석을 먼저 불러요.</p>';
     $('#faces').className='mFaces'+(sel?'':' off')};
   drawWho();
-  $('#who').onclick=e=>{const b=e.target.closest('.mk');if(!b)return;sel=list[+b.dataset.i];drawWho();setSay($('#say'),`${sel}, 기분을 골라요`);speak(`${sel}, 지금 기분이 어때요?`)};
-  $('#faces').onclick=e=>{const b=e.target.closest('.choice');if(!b||!sel)return;const x=MOODS.find(o=>o.k===b.dataset.k);D.mood[sel]=x.k;saveDay();tone(true);
-    setSay($('#say'),`${eunneun(sel)} ${x.t}`);speak(`${eunneun(sel)} ${x.t}.`);
-    sel=list.find(k=>!D.mood[k])||sel;drawWho();paintSteps()};
-  if(sel)setSay($('#say'),`${sel}, 기분을 골라요`);
-  lastSay=sel?`${sel}, 지금 기분이 어때요?`:'지금 기분이 어때요?';
+  $('#who').onclick=e=>{const b=e.target.closest('.mk');if(!b)return;const person=list[+b.dataset.i];sel=person.id;drawWho();setSay($('#say'),`${person.label}, 기분을 골라요`);speak(`${person.label}, 지금 기분이 어때요?`)};
+  $('#faces').onclick=e=>{const b=e.target.closest('.choice');if(!b||!sel)return;const x=MOODS.find(o=>o.k===b.dataset.k),person=list.find(y=>y.id===sel);if(person.teacher)D.teacherMood=x.k;else D.mood[person.label]=x.k;saveDay();tone(true);
+    setSay($('#say'),`${eunneun(person.label)} ${x.t}`);speak(`${eunneun(person.label)} ${x.t}.`);
+    sel=(list.find(y=>!moodOf(y))||person).id;drawWho();paintSteps()};
+  if(sel)setSay($('#say'),`${list.find(x=>x.id===sel).label}, 기분을 골라요`);
+  lastSay=`${list.find(x=>x.id===sel).label}, 지금 기분이 어때요?`;
 };
 R.plan=m=>{
   const p=planToday();
-  if(!p.length){m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘의 일과</h1></div></div><div class="rest">오늘은 ${WD[T.w]}요일, 학교 쉬는 날이에요</div><p class="sub" style="text-align:center">선생님 화면에서 요일별 시간표를 바꿀 수 있어요</p>`;lastSay=`오늘은 ${WD[T.w]}요일, 학교 쉬는 날이에요.`;return}
+  if(!p.length){m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘의 일과</h1></div></div><div class="rest">오늘은 ${WD[T.w]}요일, 학교 쉬는 날이에요</div><p class="sub" style="text-align:center">선생님 화면에서 요일별 시간표를 바꿀 수 있어요</p><div class="eventRow"><label for="todayEvent">오늘의 행사</label><input id="todayEvent" type="text" maxlength="100" value="${esc(D.event)}" placeholder="예: 체육대회, 현장학습"></div>`;$('#todayEvent').oninput=e=>{D.event=e.target.value.slice(0,100);saveDay()};lastSay=`오늘은 ${WD[T.w]}요일, 학교 쉬는 날이에요.`;return}
   let n=0;const items=p.map(s=>{const l=isLunch(s);if(!l)n++;return{ans:s,lunch:l,n}});
   const pal=uniq([1,2,3,4,5].flatMap(w=>splitList(S.plan[w]).slice(0,9)).filter(x=>!isLunch(x)));
   const firstEmpty=()=>{const i=items.findIndex((x,i)=>!x.lunch&&!D.pick[i]);return i<0?null:i};
@@ -688,6 +711,7 @@ R.plan=m=>{
   const pc=pal.length<=5?Math.max(1,pal.length):5;
   m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘은 무엇을 배울까요?</h1></div><div class="say" id="say"></div><button class="mini-btn" id="clr">과목 처음부터</button></div>
     <div class="slots" id="slots"></div>
+    <div class="eventRow"><label for="todayEvent">오늘의 행사</label><input id="todayEvent" type="text" maxlength="100" value="${esc(D.event)}" placeholder="예: 체육대회, 현장학습"></div>
     <div class="dismiss" id="dismiss"><b>오늘 하교 시간</b>${[5,6,7].map(n=>`<button type="button" data-period="${n}" class="${D.dismissal===n?'pick':''}" aria-pressed="${D.dismissal===n}"><span>${n}교시</span><span>${DISMISS[n]}</span></button>`).join('')}</div>
     <p class="palLab">${S.planCheck?'시간표를 보고 알맞은 과목을 눌러요':'하고 싶은 과목을 골라 넣어요'}${pal.length>10?' · 아래로 내려 다른 과목도 봐요':''}</p>
     <div class="pal" id="pal" style="grid-template-columns:repeat(${pc},1fr);grid-auto-rows:minmax(82px,1fr)">${pal.map((s,i)=>`<button class="choice" data-i="${i}">${subjIcon(s)}<span>${esc(s)}</span></button>`).join('')}</div>`;
@@ -697,6 +721,7 @@ R.plan=m=>{
     $('#pal').classList.toggle('off',slotSel===null);
     [...$('#pal').children].forEach(b=>b.classList.remove('no'))};
   drawSlots();
+  $('#todayEvent').oninput=e=>{D.event=e.target.value.slice(0,100);saveDay()};
   $('#dismiss').onclick=e=>{const b=e.target.closest('button[data-period]');if(!b)return;D.dismissal=Number(b.dataset.period);saveDay();
     $('#dismiss').querySelectorAll('button').forEach(x=>{const chosen=x===b;x.classList.toggle('pick',chosen);x.setAttribute('aria-pressed',String(chosen))});
     const line=`오늘은 ${D.dismissal}교시가 끝나는 ${DISMISS[D.dismissal]}에 하교해요.`;setSay($('#say'),line);speak(`오늘은 ${D.dismissal}교시가 끝나는 ${DISMISS_SAY[D.dismissal]}에 하교해요.`);paintSteps()};
@@ -718,15 +743,15 @@ R.plan=m=>{
 R.lunch=m=>{
   $('#writingOverlay')?.remove();
   const weekly=S.mealMode==='auto'&&!!S.school,dateKey=weekly?lunchDate:ymd,selected=weekDates.find(x=>x.key===dateKey);
-  const practice=practiceFor(dateKey),ds=dishes(dateKey),n=Math.max(ds.length,1);
+  const practice=dateKey?practiceFor(dateKey):null,ds=dateKey?dishes(dateKey):[],n=Math.max(ds.length,1);
   const cols=n<=3?n:n<=6?3:4,rows=Math.ceil(n/cols);
   const H=weekly?340:410,G=16,dh=Math.min(weekly?150:170,Math.floor((H-(rows-1)*G)/rows));
   const ic=rows<=2?84:60,af=rows<=2?16:14;
   const cw=(MAIN_W-(cols-1)*G)/cols,textW=cw-ic-14-52;
   const nfOf=s=>Math.floor(Math.max(18,Math.min(rows<=2?40:30,textW/Math.max(s.length,1)*.94)));
-  const am=autoMeal(dateKey);
-  const src=am?`${esc(S.school.name)} 급식`:(S.sample?'지금은 예시 메뉴예요':'');
-  const empty=!am?'선생님 화면에서 학교를 등록해 주세요.':
+  const am=dateKey?autoMeal(dateKey):null;
+  const src=weekly?`${esc(S.school.name)} 급식`:am?`${esc(S.school.name)} 급식`:(S.sample?'지금은 예시 메뉴예요':'');
+  const empty=weekly&&!dateKey?'위에서 날짜를 하나 골라요.':!am?'선생님 화면에서 학교를 등록해 주세요.':
     {loading:'급식을 불러오고 있어요.',
      error:am.error||'학교 급식을 불러오지 못했어요. 잠시 후 다시 열어 주세요.',
      noday:'이 날짜에는 학교 급식 정보가 없어요.'}[am.state]||'';
@@ -767,33 +792,33 @@ R.lunch=m=>{
     overlay.querySelector('#writingClose').focus();
   };
   $('#tray').onclick=e=>{const card=e.target.closest('.dish');if(card)openPractice(+card.dataset.i)};
-  lastSay=(weekly?`${selected.month}월 ${selected.day}일 점심은 `:'오늘 점심은 ')+ds.map(x=>x.name).join(', ')+(ds.length?'이에요.':'');
+  lastSay=weekly&&!selected?'이번 주 점심 날짜를 하나 골라요.':(weekly?`${selected.month}월 ${selected.day}일 점심은 `:'오늘 점심은 ')+ds.map(x=>x.name).join(', ')+(ds.length?'이에요.':'');
   if(weekly)loadWeekMeals();
 };
 R.sum=m=>{
   const a=S.kids.filter(k=>D.att[k]==='in').length,ds=dishes();
   let period=0;
   const learned=planToday().map((s,i)=>{if(isLunch(s))return null;period++;return{period,subject:D.pick[i]||s,chosen:!!D.pick[i]}}).filter(Boolean);
-  const w=WEATHER.find(x=>x.k===D.weather),f=FEEL.find(x=>x.k===D.feel);
+  const ws=WEATHER.filter(x=>D.weather.includes(x.k)),f=FEEL.find(x=>x.k===D.feel),teacherMood=MOODS.find(x=>x.k===D.teacherMood);
   const groups=MOODS.map(md=>({md,ks:S.kids.filter(k=>D.mood[k]===md.k)})).filter(g=>g.ks.length);
   m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘 아침을 정리해요</h1></div></div>
     <div class="sum">
-      <div class="box big"><div><h3>오늘은</h3><p>${T.y}년<br>${T.m}월 ${T.d}일<br><span style="color:${T.w===0?'#FF9DB4':T.w===6?'#9CCBFF':'#FFFFFF'}">${WD[T.w]}요일</span></p></div>
+      <div class="box big"><div><h3>오늘은</h3><p>${T.y}년<br>${T.m}월 ${T.d}일<br><span style="color:${T.w===0?'#FF9DB4':T.w===6?'#9CCBFF':'#FFFFFF'}">${WD[T.w]}요일</span></p>${D.event?`<div class="eventSummary"><b>오늘의 행사</b>${esc(D.event)}</div>`:''}</div>
         <p class="cheer">${D.dismissal?`<span class="homeTime">하교 ${DISMISS[D.dismissal]}</span><br>`:''}오늘도 힘차게<br>시작해요!</p></div>
       <div class="mid">
-        <div class="box"><h3>날씨</h3><p class="wx">${w?wIcon(w.k)+`<span>${w.n}${f?' · '+f.t:''}</span>`:'아직 안 골랐어요'}</p></div>
+        <div class="box"><h3>날씨</h3><p class="wx">${ws.length?wIcon(ws[0].k)+`<span>${ws.map(x=>x.n).join(' · ')}${f?' · '+f.t:''}</span>`:'아직 안 골랐어요'}</p></div>
         <div class="box"><h3>출석</h3><p>${a}명 / ${S.kids.length}명</p></div>
         <div class="box wide todayLessons"><h3>오늘 배워요 <small>✓ 일과에서 고른 과목</small></h3><div class="lessonList">${learned.length?learned.map(x=>`<div class="lesson ${x.chosen?'chosen':''}"><b>${x.period}교시</b><span>${esc(x.subject)}</span>${x.chosen?'<em aria-label="골랐어요">✓</em>':''}</div>`).join(''):'쉬는 날'}</div></div>
         <div class="box wide"><h3>점심</h3><p class="two">${ds.length?ds.slice(0,3).map(x=>esc(x.name)).join(' · ')+(ds.length>3?` <span style="color:var(--muted)">외 ${ds.length-3}가지</span>`:''):'없음'}</p></div>
       </div>
-      <div class="box"><h3>우리 반 기분</h3>${groups.length?`<div class="mlist">${groups.map(g=>`<div>${face(g.md.k)}<span class="mt"><span>${g.md.t} ${g.ks.length}명</span><small>${g.ks.map(esc).join(', ')}</small></span></div>`).join('')}</div>`:'<p style="font-size:28px">아직 안 골랐어요</p>'}</div>
+      <div class="box"><h3>우리 반 기분</h3>${teacherMood?`<div class="teacherSummary">선생님 ${face(teacherMood.k)} ${teacherMood.t}</div>`:''}${groups.length?`<div class="mlist">${groups.map(g=>`<div>${face(g.md.k)}<span class="mt"><span>${g.md.t} ${g.ks.length}명</span><small>${g.ks.map(esc).join(', ')}</small></span></div>`).join('')}</div>`:`<p style="font-size:28px">${teacherMood?'학생은 아직 안 골랐어요':'아직 안 골랐어요'}</p>`}</div>
     </div>`;
-  lastSay=`오늘은 ${T.m}월 ${T.d}일 ${WD[T.w]}요일이에요. ${w?weatherLine():''} 오늘 ${a}명이 왔어요. ${D.dismissal?`오늘은 ${DISMISS_SAY[D.dismissal]}에 하교해요. `:''}오늘도 힘차게 시작해요!`;
+  lastSay=`오늘은 ${T.m}월 ${T.d}일 ${WD[T.w]}요일이에요. ${ws.length?weatherLine():''} 오늘 ${a}명이 왔어요. ${D.event?`오늘의 행사는 ${D.event}. `:''}${D.dismissal?`오늘은 ${DISMISS_SAY[D.dismissal]}에 하교해요. `:''}오늘도 힘차게 시작해요!`;
 };
 
 /* ---------- 진행 ---------- */
 function isDone(id){const p=planToday(),ds=dishes(),here=S.kids.filter(k=>D.att[k]!=='out');
-  return{date:D.dateOk.m&&D.dateOk.d,day:D.dayOk,weather:!!(D.weather&&D.feel),att:S.kids.length>0&&S.kids.every(k=>D.att[k]),
+  return{date:D.dateOk.m&&D.dateOk.d,day:D.dayOk,weather:!!(D.weather.length&&D.feel),att:S.kids.length>0&&S.kids.every(k=>D.att[k]),
   mood:here.length>0&&here.every(k=>D.mood[k]),plan:p.every((s,i)=>isLunch(s)||D.pick[i])&&(!p.length||!!D.dismissal),lunch:ds.length>0&&ds.every((_,i)=>D.dishes[i]),sum:false}[id]}
 function paintSteps(){$('#steps').innerHTML=steps.map((s,i)=>{const d=isDone(s.id)&&i!==cur;return `${i?'<span class="sep"></span>':''}<button class="chip ${i===cur?'now':''} ${d?'done':''}" data-i="${i}" ${i===cur?'aria-current="step"':''}><i>${d?'✓':i+1}</i>${s.label}</button>`}).join('')}
 function go(i,talk){cur=Math.max(0,Math.min(steps.length-1,i));const m=$('#main');m.innerHTML='';R[steps[cur].id](m);paintSteps();
@@ -814,9 +839,10 @@ function showResetConfirm(title,details,actionLabel,onApply,returnFocus){
   overlay.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();cancel()}};
   overlay.querySelector('#cancelReset').focus();
 }
-$('#resetBtn').onclick=()=>showResetConfirm('오늘 활동을 처음부터 할까요?','오늘의 날짜, 날씨, 출석, 기분, 일과, 급식 연습 기록이 지워져요. 반 이름과 시간표 등 선생님 설정은 그대로 남아요.','오늘 다시 시작',()=>{D=blankDay();saveDay();sel=null;slotSel=null;$('#writingOverlay')?.remove();go(0,false);toast('오늘 활동을 처음부터 시작해요')},$('#resetBtn'));
+$('#resetBtn').onclick=()=>showResetConfirm('오늘 활동을 처음부터 할까요?','오늘의 날짜, 날씨, 출석, 기분, 일과, 급식 연습 기록이 지워져요. 반 이름과 시간표 등 선생님 설정은 그대로 남아요.','오늘 다시 시작',()=>{D=blankDay();saveDay();lunchDate=null;sel=null;slotSel=null;$('#writingOverlay')?.remove();go(0,false);toast('오늘 활동을 처음부터 시작해요')},$('#resetBtn'));
 document.addEventListener('keydown',e=>{if(!$('#sheet').hidden||$('#resetOverlay')||/INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='ArrowRight'||e.key==='PageDown')go(cur+1);if(e.key==='ArrowLeft'||e.key==='PageUp')go(cur-1)});
 $('#fsBtn').onclick=()=>{try{const p=document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();p&&p.catch&&p.catch(()=>toast('이 화면에서는 전체 화면을 쓸 수 없어요'))}catch(e){toast('이 화면에서는 전체 화면을 쓸 수 없어요')}};
+document.addEventListener('fullscreenchange',()=>{const label=document.fullscreenElement?'전체 화면 끝내기':'전체 화면';$('#fsBtn').setAttribute('aria-label',label);$('#fsBtn').title=label});
 
 /* ---------- 선생님 ---------- */
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;$('#stage').appendChild(d);setTimeout(()=>d.remove(),1800)}
@@ -939,7 +965,7 @@ $('#tBtn').onclick=()=>{
     sh.appendChild(overlay);
     const cancel=()=>{overlay.remove();$('#importBtn').focus()};
     overlay.querySelector('#cancelImport').onclick=cancel;
-    overlay.querySelector('#applyImport').onclick=()=>{S=Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),next);store.set('morning:settings',S);D=blankDay();saveDay();mealByDate={};chosen=S.school;close();applyS();loadMeal();toast('설정을 가져왔어요')};
+    overlay.querySelector('#applyImport').onclick=()=>{S=Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),next);store.set('morning:settings',S);D=blankDay();saveDay();lunchDate=null;mealByDate={};chosen=S.school;close();applyS();loadMeal();toast('설정을 가져왔어요')};
     overlay.onkeydown=ev=>{if(ev.key==='Escape'){ev.preventDefault();cancel()}};
     overlay.querySelector('#applyImport').focus();
   };
@@ -959,13 +985,13 @@ $('#tBtn').onclick=()=>{
   $('#xBtn').onclick=close;
   let arm=false;
   $('#rBtn').onclick=e=>{if(!arm){arm=true;e.target.classList.add('arm');e.target.textContent='한 번 더 누르면 지워져요';return}
-    D=blankDay();saveDay();sel=null;slotSel=null;close();go(0,false);toast('오늘 기록을 지웠어요')};
-  $('#dBtn').onclick=()=>{S=JSON.parse(JSON.stringify(DEFAULTS));store.set('morning:settings',S);mealByDate={};close();applyS(true);loadMeal();toast('예시 설정으로 되돌렸어요')};
+    D=blankDay();saveDay();lunchDate=null;sel=null;slotSel=null;close();go(0,false);toast('오늘 기록을 지웠어요')};
+  $('#dBtn').onclick=()=>{S=JSON.parse(JSON.stringify(DEFAULTS));store.set('morning:settings',S);lunchDate=null;mealByDate={};close();applyS(true);loadMeal();toast('예시 설정으로 되돌렸어요')};
   $('#okBtn').onclick=()=>{
     const next=settingsFromForm();
     const planChanged=[1,2,3,4,5].some(w=>next.plan[w]!==S.plan[w]);
     const mealChanged=next.lunch!==S.lunch||next.mealMode!==S.mealMode||(next.school&&next.school.code)!==(S.school&&S.school.code);
-    if(planChanged)D.pick={};if(mealChanged){D.dishes={};D.writing={};mealByDate={}};saveDay();
+    if(planChanged)D.pick={};if(mealChanged){D.dishes={};D.writing={};lunchDate=null;mealByDate={}};saveDay();
     S=Object.assign(S,next);
     store.set('morning:settings',S);close();applyS();loadMeal();
     toast(next.mealMode==='auto'&&!chosen?'저장했어요. 학교를 고르면 급식이 나와요':'저장했어요')};
