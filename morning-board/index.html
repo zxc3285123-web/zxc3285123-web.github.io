@@ -171,12 +171,18 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 .dismiss button{height:52px;flex:1;min-width:0;padding:0 8px;border:3px solid var(--line);border-radius:15px;background:var(--card);font-size:19px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px}
 .dismiss button span:last-child{font-variant-numeric:tabular-nums}
 .dismiss button.pick{border-color:var(--accent);background:var(--accent-soft);color:#8E3E17}
+main:has(.eventRow){overflow-y:auto}
 .eventRow{display:flex;align-items:center;gap:14px;margin-top:12px;flex-shrink:0}
-.eventRow label{font-size:21px;font-weight:900;white-space:nowrap}
-.eventRow input{box-sizing:border-box;flex:1;min-width:0;height:54px;padding:0 16px;border:3px solid var(--line);border-radius:15px;background:#fff;color:var(--ink);font:700 21px var(--body)}
-.eventRow input::placeholder{color:var(--muted);font-weight:500}
-.eventRow button{height:54px;padding:0 18px;border-radius:15px;background:var(--ink);color:#fff;font-size:20px;font-weight:900;white-space:nowrap}
-.eventGuide{white-space:normal;text-align:center;overflow-wrap:anywhere;line-height:1.25}
+.eventRow>strong{font-size:21px;font-weight:900;white-space:nowrap}
+.eventWritingBox{display:flex;gap:8px;flex:1;min-width:0;height:112px}
+.eventSurface{position:relative;flex:1;min-width:0;border:3px solid var(--line);border-radius:18px;background:linear-gradient(transparent 52%,#E2EBE4 52.5%,#E2EBE4 53.5%,transparent 54%),#fff;overflow:hidden}
+.eventGuide{position:absolute;inset:0 14px;display:grid;place-items:center;text-align:center;overflow-wrap:anywhere;line-height:1.2;color:#AAB8AE;font-family:var(--display);pointer-events:none}
+.eventCanvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.eventTyping{box-sizing:border-box;position:absolute;inset:0;width:100%;height:100%;padding:8px 18px;border:0;background:#fff;color:var(--ink);font:700 26px var(--body)}
+.eventTyping::placeholder{color:var(--muted);font-weight:500}
+.eventWritingTools{display:flex;flex-direction:column;gap:8px;width:132px;flex-shrink:0}
+.eventWritingTools button{flex:1;min-height:0;padding:4px 8px;border-radius:14px;background:var(--ink);color:#fff;font-size:17px;font-weight:900;line-height:1.15}
+.eventWritingTools button:last-child{background:var(--paper);color:var(--ink);border:2px solid var(--line)}
 .eventSummary{margin:16px 0;font-size:23px;line-height:1.35;overflow-wrap:anywhere}
 .eventSummary b{display:block;color:#BFE8CE;font-size:18px}
 .tool.fullscreen{width:52px;padding:0;justify-content:center}.tool.fullscreen svg{width:26px;height:26px}
@@ -341,6 +347,7 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
   .clock{font-size:27px}.tools{order:4;flex:0 0 100%;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
   .tool{height:40px;padding:0 5px;font-size:14px;border-radius:10px;justify-content:center}
   main{flex:1;overflow:visible;padding:24px 20px 30px;min-height:440px}
+  main:has(.eventRow){overflow:visible}
   .qrow{min-height:0;flex-wrap:wrap;gap:10px}.q{font-size:clamp(29px,4vw,42px);white-space:normal}.sub{font-size:17px;line-height:1.45}
   .say{font-size:28px;min-height:32px}.qrow .say{flex:0 1 auto;white-space:normal;text-align:left}
   main:has(.dateWrap){justify-content:center}
@@ -374,7 +381,7 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
   .top{padding:10px 12px}.brand b{font-size:24px}.clock{font-size:23px}.today{order:2}.tools{order:3;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));width:100%;flex:none;gap:6px}.tool{font-size:13px;height:38px;justify-content:center;padding:0 3px}.tool:nth-child(n){grid-column:span 2}
   main{padding:18px 12px 24px;min-height:0}.q{font-size:30px}.sub{font-size:15px}.qrow .say{font-size:22px}
   .dateWrap{grid-template-columns:1fr;gap:14px}.monthCalendar{max-width:390px;width:100%;margin:auto}.ilryeok{max-width:260px;width:100%;margin:auto}.ilryeok .head{padding:27px 0 7px}.ilryeok .num{font-size:100px;line-height:1}.ilryeok .wd{padding-bottom:12px}.dateQ{grid-column:auto;padding:16px}.dateQ .row3 .choice{height:84px;font-size:32px}
-  .eventRow{align-items:stretch;flex-direction:column;gap:6px}.eventRow label{font-size:18px}.eventRow input{flex:none;width:100%;font-size:18px}.eventRow button{width:100%;height:50px;font-size:18px}
+  main:has(.eventRow){overflow:visible}.eventRow{align-items:stretch;flex-direction:column;gap:6px}.eventRow>strong{font-size:18px}.eventWritingBox{flex-direction:column;height:auto;flex:none;width:100%}.eventSurface{flex:none;width:100%;height:112px;box-sizing:border-box}.eventWritingTools{flex-direction:row;width:100%}.eventWritingTools button{min-height:48px;font-size:16px}
   .tool.fullscreen{width:auto;min-width:0}
   .week{grid-template-columns:repeat(4,minmax(0,1fr))}.week .choice{height:105px;font-size:43px}.week .choice small{font-size:13px}
   .wGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.wGrid .choice{height:120px;font-size:19px}.wGrid svg{width:60px;height:60px}.fGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -701,42 +708,25 @@ R.mood=m=>{
   if(sel)setSay($('#say'),`${list.find(x=>x.id===sel).label}, 기분을 골라요`);
   lastSay=`${list.find(x=>x.id===sel).label}, 지금 기분이 어때요?`;
 };
-const eventEditorHTML=()=>`<div class="eventRow"><label for="todayEvent">오늘의 행사</label><input id="todayEvent" type="text" maxlength="100" value="${esc(D.event)}" placeholder="예: 체육대회, 현장학습"><button id="eventWrite" type="button">글씨 쓰기</button></div>`;
-function openEventWriting(){
-  $('#writingOverlay')?.remove();
-  const name=D.event.trim(),saved=D.eventWriting;
-  let paths=saved.name===name?saved.paths:[];
-  const overlay=document.createElement('div');overlay.className='writingOverlay';overlay.id='writingOverlay';
-  const fontSize=Math.max(30,Math.min(105,Math.floor(780/Math.max(name.length,1))));
-  overlay.innerHTML=`<div class="writingPanel" role="dialog" aria-modal="true" aria-label="오늘의 행사 글씨 쓰기">
-    <div class="writingHead"><h2>오늘의 행사</h2><button id="writingClose" type="button">닫기</button></div>
-    <p>${name?'흐린 글씨를 손가락이나 펜으로 따라 써요.':'행사 이름을 손가락이나 펜으로 써요.'}</p>
-    <div class="writingSurface"><span class="writingGuide eventGuide" style="font-size:${fontSize}px">${esc(name)}</span><canvas class="writingCanvas" aria-label="오늘의 행사 글씨 쓰는 자리"></canvas></div>
-    <div class="writingActions"><button id="writingClear" type="button">지우고 다시 쓰기</button><button class="nextDish" id="writingDone" type="button">다 썼어요</button></div></div>`;
-  $('#stage').appendChild(overlay);
-  const canvas=overlay.querySelector('canvas'),dpr=window.devicePixelRatio||1;
-  canvas.width=Math.round(canvas.clientWidth*dpr);canvas.height=Math.round(canvas.clientHeight*dpr);
-  const save=()=>{D.eventWriting={name,paths};saveDay()};
+const eventEditorHTML=()=>`<div class="eventRow"><strong>오늘의 행사</strong><div class="eventWritingBox"><div class="eventSurface" id="eventSurface"><span class="eventGuide" id="eventGuide"></span><canvas class="eventCanvas" id="eventCanvas" aria-label="오늘의 행사 손글씨 쓰는 자리"></canvas><input class="eventTyping" id="todayEvent" type="text" maxlength="100" value="${esc(D.event)}" placeholder="예: 체육대회, 현장학습" aria-label="오늘의 행사 글자 입력" hidden></div><div class="eventWritingTools"><button id="eventTextToggle" type="button">글자 입력</button><button id="eventClear" type="button">글씨 지우기</button></div></div></div>`;
+function bindEventEditor(){
+  const canvas=$('#eventCanvas'),input=$('#todayEvent'),guide=$('#eventGuide'),toggle=$('#eventTextToggle');
+  const dpr=window.devicePixelRatio||1;let paths=D.eventWriting.paths,active=null;
+  const updateGuide=()=>{guide.textContent=D.event||'여기에 글씨를 써요';guide.style.fontSize=Math.max(22,Math.min(52,Math.floor(480/Math.max(D.event.length,1))))+'px'};
   const renderInk=()=>{const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#1E2944';ctx.fillStyle='#1E2944';ctx.lineWidth=7*dpr;ctx.lineCap='round';ctx.lineJoin='round';
     paths.forEach(path=>{if(!path.length)return;if(path.length===1){ctx.beginPath();ctx.arc(path[0][0]*canvas.width,path[0][1]*canvas.height,3.5*dpr,0,Math.PI*2);ctx.fill();return}
       ctx.beginPath();path.forEach(([px,py],j)=>j?ctx.lineTo(px*canvas.width,py*canvas.height):ctx.moveTo(px*canvas.width,py*canvas.height));ctx.stroke()})};
-  renderInk();let active=null;
-  const addPoint=e=>{const rect=canvas.getBoundingClientRect(),point=[Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width)),Math.max(0,Math.min(1,(e.clientY-rect.top)/rect.height))];
-    const prev=active[active.length-1];if(!prev||Math.hypot(point[0]-prev[0],point[1]-prev[1])>.004){active.push(point);renderInk()}};
+  const sizeCanvas=()=>{if(!canvas.isConnected||canvas.hidden)return;const r=canvas.getBoundingClientRect();if(!r.width||!r.height)return;canvas.width=Math.round(r.width*dpr);canvas.height=Math.round(r.height*dpr);renderInk()};
+  updateGuide();sizeCanvas();
+  const observer=new ResizeObserver(()=>{if(!canvas.isConnected){observer.disconnect();return}sizeCanvas()});observer.observe($('#eventSurface'));
+  const addPoint=e=>{const r=canvas.getBoundingClientRect(),point=[Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))];const prev=active[active.length-1];if(!prev||Math.hypot(point[0]-prev[0],point[1]-prev[1])>.004){active.push(point);renderInk()}};
   canvas.onpointerdown=e=>{e.preventDefault();canvas.setPointerCapture(e.pointerId);active=[];paths.push(active);addPoint(e)};
   canvas.onpointermove=e=>{if(active){e.preventDefault();addPoint(e)}};
-  const finish=()=>{if(!active)return;save();active=null};
+  const finish=()=>{if(!active)return;D.eventWriting={name:D.event,paths};saveDay();active=null};
   canvas.onpointerup=finish;canvas.onpointercancel=finish;
-  const close=()=>{finish();overlay.remove();$('#eventWrite')?.focus()};
-  overlay.querySelector('#writingClose').onclick=close;
-  overlay.querySelector('#writingDone').onclick=()=>{close();speak('잘 썼어요.')};
-  overlay.querySelector('#writingClear').onclick=()=>{paths=[];save();renderInk();speak('지우고 다시 써 봐요.')};
-  overlay.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();close()}};
-  overlay.querySelector('#writingClose').focus();
-}
-function bindEventEditor(){
-  $('#todayEvent').oninput=e=>{D.event=e.target.value.slice(0,100);saveDay()};
-  $('#eventWrite').onclick=openEventWriting;
+  input.oninput=e=>{D.event=e.target.value.slice(0,100);D.eventWriting.name=D.event;saveDay();updateGuide()};
+  toggle.onclick=()=>{const typing=input.hidden;input.hidden=!typing;canvas.hidden=typing;guide.hidden=typing;toggle.textContent=typing?'손글씨로 돌아가기':'글자 입력';if(typing)input.focus();else{requestAnimationFrame(sizeCanvas);canvas.focus()}};
+  $('#eventClear').onclick=()=>{paths=[];D.eventWriting={name:D.event,paths};saveDay();renderInk();speak('지우고 다시 써 봐요.')};
 }
 R.plan=m=>{
   const p=planToday();
