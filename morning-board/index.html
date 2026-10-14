@@ -168,6 +168,12 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 .rest{margin-top:60px;font-family:var(--display);font-size:56px;text-align:center}
 
 /* 급식 */
+.mealWeek{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:12px;flex-shrink:0}
+.mealDay{height:86px;min-width:0;padding:9px 12px;border:3px solid var(--line);border-radius:19px;background:var(--card);display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:3px;text-align:left;box-shadow:0 4px 0 var(--line)}
+.mealDay strong{font-family:var(--display);font-size:27px;font-weight:400;white-space:nowrap}
+.mealDay small{font-size:16px;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.mealDay.pick{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 4px 0 var(--accent)}
+.mealDay.today strong::after{content:' 오늘';font:700 14px var(--body);color:var(--leaf)}
 .tray{display:grid;gap:16px;margin-top:20px}
 .dish{background:var(--card);border:4px solid var(--line);border-radius:24px;padding:12px 16px;display:flex;gap:14px;align-items:center;text-align:left;box-shadow:0 5px 0 var(--line);min-width:0;overflow:hidden}
 .dish svg{flex-shrink:0}
@@ -337,6 +343,7 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
   .dismiss{flex-wrap:wrap}.dismiss b{width:100%;font-size:19px}.dismiss button{height:48px;font-size:17px}
   .palLab{font-size:18px;margin-top:18px}.pal{grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-auto-rows:70px!important;height:auto;max-height:none;overflow:visible;gap:9px}.pal .choice{font-size:21px;padding:0 8px;gap:5px}.pal svg{width:42px;height:42px;flex-shrink:0}
   .tray{grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-auto-rows:minmax(125px,auto)!important;gap:9px}.dish{padding:8px;gap:6px}.dish svg{width:55px;height:55px}.dish b{font-size:clamp(18px,2.5vw,25px)!important}.al span{font-size:12px!important}
+  .mealWeek{gap:7px}.mealDay{height:72px;padding:7px}.mealDay strong{font-size:21px}.mealDay small{font-size:13px}
   .sum{grid-template-columns:minmax(0,1fr);gap:12px}.big{min-height:160px;flex-direction:row;align-items:center}.big p{font-size:36px}.big p.cheer{font-size:27px;text-align:right}
   .mid{grid-template-rows:110px minmax(180px,auto) 110px;gap:12px}.box{padding:13px 16px}.sum>.box:last-child{max-height:250px}.lessonList{grid-auto-rows:minmax(42px,auto)}
   .bot{position:relative;z-index:3;flex-wrap:wrap;padding:10px 16px;gap:8px}.steps{order:3;flex:0 0 100%;justify-content:flex-start;overflow-x:auto}.chip{font-size:18px;height:40px;padding:0 8px 0 3px}.chip i{width:26px;height:26px;flex-basis:26px;font-size:15px}.nav{height:48px;font-size:24px;padding:0 14px}.nav.next{margin-left:auto}.nav svg{width:21px;height:21px}
@@ -356,6 +363,7 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
   .mFaces{grid-template-columns:repeat(2,1fr)}.mFaces .choice:last-child:nth-child(3n + 1){grid-column:auto}.mFaces .choice:last-child:nth-child(2n + 1){grid-column:1/-1;width:calc(50% - 4px);justify-self:center}.slots{grid-template-columns:repeat(3,minmax(0,1fr))}.pal{grid-template-columns:repeat(2,minmax(0,1fr))!important}
   .dismiss button{height:62px;flex-direction:column;gap:0;font-size:16px;line-height:1.1}
   .tray{grid-template-columns:repeat(2,minmax(0,1fr))!important}.dish{min-height:100px}.dish svg{width:40px;height:40px}
+  .mealWeek{grid-template-columns:repeat(3,minmax(0,1fr))}.mealDay{height:69px}.mealDay.today{order:0}.mealDay strong{font-size:17px}.mealDay.today strong::after{content:''}.mealDay.today:not(.pick){border-color:#80BA99}
   .mid{grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto}.mid>.box:nth-child(-n+2){min-height:120px;box-sizing:border-box}.mid .wx{font-size:18px}.mid .wx svg{width:35px;height:35px}.mid>.box:nth-child(2) p{font-size:27px}.sum>.box:last-child{max-height:none;overflow:visible}.lessonList{grid-template-columns:repeat(2,minmax(0,1fr))}.lesson{font-size:18px}.lesson b{font-size:13px}
   .pbody{grid-template-columns:1fr}.panel footer .btn{height:43px;padding:0 12px;font-size:15px}.panel header h2{font-size:28px}
   .writingHead h2{font-size:29px}.writingActions{flex-wrap:wrap}.writingActions button{font-size:15px}
@@ -517,6 +525,8 @@ const planToday=()=>(T.w>=1&&T.w<=5)?splitList(S.plan[T.w]).slice(0,9):[];
 const DISMISS={5:'13:50',6:'14:40',7:'15:30'};
 const DISMISS_SAY={5:'오후 1시 50분',6:'오후 2시 40분',7:'오후 3시 30분'};
 const ymd=`${T.y}${String(T.m).padStart(2,'0')}${String(T.d).padStart(2,'0')}`;
+const weekDates=(()=>{const monday=new Date(T.y,T.m-1,T.d);monday.setDate(monday.getDate()-((T.w+6)%7));return Array.from({length:5},(_,i)=>{const d=new Date(monday);d.setDate(monday.getDate()+i);return{key:`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`,month:d.getMonth()+1,day:d.getDate(),weekday:i+1}})})();
+let lunchDate=T.w>=1&&T.w<=5?ymd:weekDates[0].key;
 /* 나이스 메뉴 이름 정리: 별표·# 표시와 (안)(J)(고) 같은 짧은 표시 지우기 */
 const cleanNeis=l=>String(l).replace(/[#*]/g,'').replace(/\((?![\d.,\s]+\))[^)]{1,2}\)/g,'').replace(/[@-].*$/,'').replace(/\s{2,}/g,' ').trim();
 /* 나이스 교육정보 개방 포털 Open API */
@@ -527,26 +537,36 @@ async function neis(service,params){
   if(!res.ok)throw new Error(j.error||'학교 정보를 가져오지 못했어요');
   return j.rows||[];
 }
-let meal={state:'idle',lines:[]};
-async function loadMeal(){
-  if(S.mealMode!=='auto'||!S.school){meal={state:'idle',lines:[]};refreshLunch();return}
-  const key=`morning:meal:v2:${S.school.code}:${ymd}`,hit=store.get(key,null);
-  if(hit&&hit.state==='ok'&&Date.now()-hit.savedAt<2*60*60*1000){meal=hit;refreshLunch();return}
-  if(T.w===0||T.w===6){meal={state:'noday',lines:[]};refreshLunch();return}
-  meal={state:'loading',lines:[]};refreshLunch();
+let mealByDate={};
+async function loadMeal(dateKey=ymd){
+  if(S.mealMode!=='auto'||!S.school)return;
+  if(mealByDate[dateKey])return;
+  const school=S.school,key=`morning:meal:v2:${school.code}:${dateKey}`,hit=store.get(key,null);
+  if(hit&&hit.state==='ok'&&Date.now()-hit.savedAt<2*60*60*1000){mealByDate[dateKey]=hit;refreshLunch();return}
+  const d=new Date(Number(dateKey.slice(0,4)),Number(dateKey.slice(4,6))-1,Number(dateKey.slice(6,8)));
+  if(d.getDay()===0||d.getDay()===6){mealByDate[dateKey]={state:'noday',lines:[]};refreshLunch();return}
+  mealByDate[dateKey]={state:'loading',lines:[]};refreshLunch();
   try{
-    const rows=await neis('mealServiceDietInfo',{ATPT_OFCDC_SC_CODE:S.school.office,SD_SCHUL_CODE:S.school.code,MLSV_YMD:ymd});
+    const rows=await neis('mealServiceDietInfo',{ATPT_OFCDC_SC_CODE:school.office,SD_SCHUL_CODE:school.code,MLSV_YMD:dateKey});
+    if(S.school?.code!==school.code)return;
     const r=rows.find(x=>x.MMEAL_SC_NM==='중식')||rows[0];
-    meal=r?{state:'ok',lines:String(r.DDISH_NM).split(/<br\s*\/?>/i).map(cleanNeis).filter(Boolean)}:{state:'noday',lines:[]};
-    if(meal.state==='ok')store.set(key,{...meal,savedAt:Date.now()});
-  }catch(e){meal={state:'error',lines:[],error:e.message}}
+    mealByDate[dateKey]=r?{state:'ok',lines:String(r.DDISH_NM).split(/<br\s*\/?>/i).map(cleanNeis).filter(Boolean)}:{state:'noday',lines:[]};
+    if(mealByDate[dateKey].state==='ok')store.set(key,{...mealByDate[dateKey],savedAt:Date.now()});
+  }catch(e){if(S.school?.code!==school.code)return;mealByDate[dateKey]={state:'error',lines:[],error:'학교 급식을 불러오지 못했어요. 날짜를 다시 눌러 주세요.'}}
   refreshLunch();
 }
-function autoMeal(){
+function loadWeekMeals(){if(S.mealMode==='auto'&&S.school)weekDates.forEach(day=>loadMeal(day.key))}
+function autoMeal(dateKey=ymd){
   if(S.mealMode!=='auto'||!S.school)return null;
-  return meal.state==='idle'?{state:'loading',lines:[]}:meal;
+  return mealByDate[dateKey]||{state:'loading',lines:[]};
 }
-const dishes=()=>{const a=autoMeal();return(a?a.lines:S.lunch.split('\n')).map(x=>x.trim()).filter(Boolean).map(parseDish).slice(0,12)};
+const dishes=(dateKey=ymd)=>{const a=autoMeal(dateKey);return(a?a.lines:S.lunch.split('\n')).map(x=>x.trim()).filter(Boolean).map(parseDish).slice(0,12)};
+const practiceByDate={};
+function practiceFor(dateKey){if(dateKey===ymd)return{dishes:D.dishes,writing:D.writing,save:saveDay};
+  const key=`morning:practice:v1:${S.school?.code||'manual'}:${dateKey}`;
+  if(!practiceByDate[key])practiceByDate[key]=store.get(key,{dishes:{},writing:{}});
+  const p=practiceByDate[key];return{...p,save:()=>store.set(key,p)};
+}
 const uniq=a=>a.filter((x,i)=>a.indexOf(x)===i);
 function setSay(el,text,ok){if(!el)return;el.textContent=text;el.className=el.className.replace(/\s*(pop|try)/g,'');void el.offsetWidth;el.classList.add('pop');if(ok===false)el.classList.add('try')}
 function choices(box,opts,good,onGood,sayEl,label){
@@ -697,23 +717,26 @@ R.plan=m=>{
 };
 R.lunch=m=>{
   $('#writingOverlay')?.remove();
-  const ds=dishes(),n=Math.max(ds.length,1);
+  const weekly=S.mealMode==='auto'&&!!S.school,dateKey=weekly?lunchDate:ymd,selected=weekDates.find(x=>x.key===dateKey);
+  const practice=practiceFor(dateKey),ds=dishes(dateKey),n=Math.max(ds.length,1);
   const cols=n<=3?n:n<=6?3:4,rows=Math.ceil(n/cols);
-  const H=410,G=16,dh=Math.min(170,Math.floor((H-(rows-1)*G)/rows));
+  const H=weekly?340:410,G=16,dh=Math.min(weekly?150:170,Math.floor((H-(rows-1)*G)/rows));
   const ic=rows<=2?84:60,af=rows<=2?16:14;
   const cw=(MAIN_W-(cols-1)*G)/cols,textW=cw-ic-14-52;
   const nfOf=s=>Math.floor(Math.max(18,Math.min(rows<=2?40:30,textW/Math.max(s.length,1)*.94)));
-  const am=autoMeal();
+  const am=autoMeal(dateKey);
   const src=am?`${esc(S.school.name)} 급식`:(S.sample?'지금은 예시 메뉴예요':'');
   const empty=!am?'선생님 화면에서 학교를 등록해 주세요.':
     {loading:'급식을 불러오고 있어요.',
      error:am.error||'학교 급식을 불러오지 못했어요. 잠시 후 다시 열어 주세요.',
-     noday:'오늘은 학교 급식 정보가 없어요.'}[am.state]||'';
-  m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘 점심은 무엇일까요?</h1><p class="sub">메뉴를 하나 누르면 큰 글씨 따라 쓰기가 열려요${src?' · '+src:''}</p></div><div class="say" id="say"></div></div>
-    <div class="tray" id="tray" style="grid-template-columns:repeat(${cols},1fr);grid-auto-rows:${dh}px">${ds.map((x,i)=>`<button class="dish ${D.dishes[i]?'seen':''}" data-i="${i}" aria-label="${esc(x.name)} 따라 쓰기 열기">${dishIcon(i,ic)}<span class="tx"><b style="font-size:${nfOf(x.name)}px">${esc(x.name)}</b>${x.al.length?`<span class="al">${(rows<=2?x.al:x.al.slice(0,3)).map(k=>`<span style="font-size:${af}px">${k} ${ALLERGY[k]}</span>`).join('')}${rows>2&&x.al.length>3?`<span style="font-size:${af}px">외 ${x.al.length-3}</span>`:''}</span>`:''}</span></button>`).join('')||`<p class="rest" style="grid-column:1/-1;font-size:40px;margin-top:40px">${empty}</p>`}</div>`;
+     noday:'이 날짜에는 학교 급식 정보가 없어요.'}[am.state]||'';
+  m.innerHTML=`<div class="qrow"><div><h1 class="q">${weekly?'이번 주 점심은 무엇일까요?':'오늘 점심은 무엇일까요?'}</h1><p class="sub">${weekly?'날짜를 누르면 그날 메뉴가 나와요. ':''}메뉴를 누르면 따라 쓰기가 열려요${src?' · '+src:''}</p></div><div class="say" id="say"></div></div>
+    ${weekly?`<div class="mealWeek" id="mealWeek">${weekDates.map(day=>{const a=autoMeal(day.key),first=a?.state==='ok'?parseDish(a.lines[0]||'').name:a?.state==='noday'?'급식 정보 없음':a?.state==='error'?'다시 불러오기':'불러오는 중';return `<button class="mealDay ${day.key===dateKey?'pick':''} ${day.key===ymd?'today':''}" data-date="${day.key}" aria-pressed="${day.key===dateKey}" aria-label="${day.month}월 ${day.day}일 ${WD[day.weekday]}요일${day.key===ymd?' 오늘':''}, ${esc(first)}"><strong>${day.month}/${day.day} ${WD[day.weekday]}요일</strong><small>${esc(first)}</small></button>`}).join('')}</div>`:''}
+    <div class="tray" id="tray" style="grid-template-columns:repeat(${cols},1fr);grid-auto-rows:${dh}px">${ds.map((x,i)=>`<button class="dish ${practice.dishes[i]?'seen':''}" data-i="${i}" aria-label="${esc(x.name)} 따라 쓰기 열기">${dishIcon(i,ic)}<span class="tx"><b style="font-size:${nfOf(x.name)}px">${esc(x.name)}</b>${x.al.length?`<span class="al">${(rows<=2?x.al:x.al.slice(0,3)).map(k=>`<span style="font-size:${af}px">${k} ${ALLERGY[k]}</span>`).join('')}${rows>2&&x.al.length>3?`<span style="font-size:${af}px">외 ${x.al.length-3}</span>`:''}</span>`:''}</span></button>`).join('')||`<p class="rest" style="grid-column:1/-1;font-size:40px;margin-top:40px">${empty}</p>`}</div>`;
+  if(weekly)$('#mealWeek').onclick=e=>{const b=e.target.closest('button[data-date]');if(!b)return;lunchDate=b.dataset.date;if(mealByDate[lunchDate]?.state==='error')delete mealByDate[lunchDate];go(cur,false);const d=weekDates.find(x=>x.key===lunchDate);speak(`${d.month}월 ${d.day}일 ${WD[d.weekday]}요일 급식이에요.`)};
   const openPractice=i=>{
     const x=ds[i],name=x.name,card=$('#tray').querySelector(`[data-i="${i}"]`);
-    D.dishes[i]=1;saveDay();card.classList.add('seen');paintSteps();setSay($('#say'),name);speak(`${name}. 따라 써 봐요.`);
+    practice.dishes[i]=1;practice.save();card.classList.add('seen');paintSteps();setSay($('#say'),name);speak(`${name}. 따라 써 봐요.`);
     const overlay=document.createElement('div');overlay.className='writingOverlay';overlay.id='writingOverlay';
     const fontSize=Math.max(30,Math.min(110,Math.floor(1130/Math.max(name.length,1))));
     overlay.innerHTML=`<div class="writingPanel" role="dialog" aria-modal="true" aria-label="${esc(name)} 따라 쓰기">
@@ -724,7 +747,7 @@ R.lunch=m=>{
     $('#stage').appendChild(overlay);
     const canvas=overlay.querySelector('canvas'),dpr=window.devicePixelRatio||1;
     canvas.width=Math.round(canvas.clientWidth*dpr);canvas.height=Math.round(canvas.clientHeight*dpr);
-    const saved=D.writing[i];let paths=saved&&saved.name===name?saved.paths:[];
+    const saved=practice.writing[i];let paths=saved&&saved.name===name?saved.paths:[];
     const renderInk=()=>{
       const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#1E2944';ctx.fillStyle='#1E2944';ctx.lineWidth=7*dpr;ctx.lineCap='round';ctx.lineJoin='round';
       paths.forEach(path=>{if(!path.length)return;if(path.length===1){ctx.beginPath();ctx.arc(path[0][0]*canvas.width,path[0][1]*canvas.height,3.5*dpr,0,Math.PI*2);ctx.fill();return}
@@ -734,17 +757,18 @@ R.lunch=m=>{
       const prev=active[active.length-1];if(!prev||Math.hypot(point[0]-prev[0],point[1]-prev[1])>.004){active.push(point);renderInk()}};
     canvas.onpointerdown=e=>{e.preventDefault();canvas.setPointerCapture(e.pointerId);active=[];paths.push(active);addPoint(e)};
     canvas.onpointermove=e=>{if(active){e.preventDefault();addPoint(e)}};
-    const finish=()=>{if(!active)return;D.writing[i]={name,paths};saveDay();active=null};
+    const finish=()=>{if(!active)return;practice.writing[i]={name,paths};practice.save();active=null};
     canvas.onpointerup=finish;canvas.onpointercancel=finish;
     const close=()=>{finish();overlay.remove();card.focus()};
     overlay.querySelector('#writingClose').onclick=close;
-    overlay.querySelector('#writingClear').onclick=()=>{paths=[];D.writing[i]={name,paths};saveDay();renderInk();speak('지우고 다시 써 봐요.')};
+    overlay.querySelector('#writingClear').onclick=()=>{paths=[];practice.writing[i]={name,paths};practice.save();renderInk();speak('지우고 다시 써 봐요.')};
     overlay.querySelector('#writingNext').onclick=()=>{close();if(i<ds.length-1)openPractice(i+1);else speak('메뉴로 돌아가요.')};
     overlay.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();close()}};
     overlay.querySelector('#writingClose').focus();
   };
   $('#tray').onclick=e=>{const card=e.target.closest('.dish');if(card)openPractice(+card.dataset.i)};
-  lastSay='오늘 점심은 '+ds.map(x=>x.name).join(', ')+(ds.length?'이에요.':'');
+  lastSay=(weekly?`${selected.month}월 ${selected.day}일 점심은 `:'오늘 점심은 ')+ds.map(x=>x.name).join(', ')+(ds.length?'이에요.':'');
+  if(weekly)loadWeekMeals();
 };
 R.sum=m=>{
   const a=S.kids.filter(k=>D.att[k]==='in').length,ds=dishes();
@@ -915,7 +939,7 @@ $('#tBtn').onclick=()=>{
     sh.appendChild(overlay);
     const cancel=()=>{overlay.remove();$('#importBtn').focus()};
     overlay.querySelector('#cancelImport').onclick=cancel;
-    overlay.querySelector('#applyImport').onclick=()=>{S=Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),next);store.set('morning:settings',S);D=blankDay();saveDay();chosen=S.school;close();applyS();loadMeal();toast('설정을 가져왔어요')};
+    overlay.querySelector('#applyImport').onclick=()=>{S=Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),next);store.set('morning:settings',S);D=blankDay();saveDay();mealByDate={};chosen=S.school;close();applyS();loadMeal();toast('설정을 가져왔어요')};
     overlay.onkeydown=ev=>{if(ev.key==='Escape'){ev.preventDefault();cancel()}};
     overlay.querySelector('#applyImport').focus();
   };
@@ -936,18 +960,18 @@ $('#tBtn').onclick=()=>{
   let arm=false;
   $('#rBtn').onclick=e=>{if(!arm){arm=true;e.target.classList.add('arm');e.target.textContent='한 번 더 누르면 지워져요';return}
     D=blankDay();saveDay();sel=null;slotSel=null;close();go(0,false);toast('오늘 기록을 지웠어요')};
-  $('#dBtn').onclick=()=>{S=JSON.parse(JSON.stringify(DEFAULTS));store.set('morning:settings',S);close();applyS(true);toast('예시 설정으로 되돌렸어요')};
+  $('#dBtn').onclick=()=>{S=JSON.parse(JSON.stringify(DEFAULTS));store.set('morning:settings',S);mealByDate={};close();applyS(true);loadMeal();toast('예시 설정으로 되돌렸어요')};
   $('#okBtn').onclick=()=>{
     const next=settingsFromForm();
     const planChanged=[1,2,3,4,5].some(w=>next.plan[w]!==S.plan[w]);
     const mealChanged=next.lunch!==S.lunch||next.mealMode!==S.mealMode||(next.school&&next.school.code)!==(S.school&&S.school.code);
-    if(planChanged)D.pick={};if(mealChanged){D.dishes={};D.writing={}};saveDay();
+    if(planChanged)D.pick={};if(mealChanged){D.dishes={};D.writing={};mealByDate={}};saveDay();
     S=Object.assign(S,next);
     store.set('morning:settings',S);close();applyS();loadMeal();
     toast(next.mealMode==='auto'&&!chosen?'저장했어요. 학교를 고르면 급식이 나와요':'저장했어요')};
   setTimeout(()=>$('#sCls').focus(),50);
 };
-function refreshLunch(){if(!steps.length)return;paintSteps();if(steps[cur]&&(steps[cur].id==='lunch'||steps[cur].id==='sum')&&$('#sheet').hidden)go(cur,false)}
+function refreshLunch(){if(!steps.length)return;paintSteps();if($('#writingOverlay'))return;if(steps[cur]&&(steps[cur].id==='lunch'||steps[cur].id==='sum')&&$('#sheet').hidden)go(cur,false)}
 function setCls(){const c=$('#cls');c.textContent=S.cls;c.style.fontSize=Math.max(20,Math.min(34,Math.floor(250/Math.max(S.cls.length*.95,1))))+'px'}
 function applyS(){setCls();const id=steps[cur]&&steps[cur].id;buildSteps();slotSel=null;sel=null;const j=steps.findIndex(s=>s.id===id);go(j<0?0:j,false)}
 
