@@ -48,6 +48,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:4px soli
 .tool{height:52px;padding:0 16px;border-radius:14px;background:var(--paper);font-size:18px;font-weight:700;display:flex;align-items:center;gap:6px;white-space:nowrap}
 .tool.listen{background:var(--leaf-soft);color:var(--leaf)}
 .tool.home{background:var(--ink);color:#fff}
+.tool.reset{background:var(--accent-soft);color:#9C431B}
 
 /* 가운데 */
 main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direction:column;min-height:0}
@@ -303,7 +304,8 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
     <div class="today" id="hint"></div>
     <div class="clock" id="clock">9:00</div>
     <div class="tools">
-      <button class="tool home" id="homeBtn">처음으로</button>
+      <button class="tool home" id="homeBtn" title="첫 화면으로 이동해요. 오늘 기록은 남아요.">처음으로</button>
+      <button class="tool reset" id="resetBtn">오늘 다시 시작</button>
       <button class="tool" id="fsBtn">전체 화면</button>
       <button class="tool" id="shareBtn">공유</button>
       <button class="tool" id="tBtn">선생님</button>
@@ -583,7 +585,7 @@ R.plan=m=>{
   const firstEmpty=()=>{const i=items.findIndex((x,i)=>!x.lunch&&!D.pick[i]);return i<0?null:i};
   if(slotSel===null||slotSel>=items.length||items[slotSel].lunch)slotSel=firstEmpty();
   const pc=pal.length<=5?Math.max(1,pal.length):5;
-  m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘은 무엇을 배울까요?</h1></div><div class="say" id="say"></div><button class="mini-btn" id="clr">다시 하기</button></div>
+  m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘은 무엇을 배울까요?</h1></div><div class="say" id="say"></div><button class="mini-btn" id="clr">과목 처음부터</button></div>
     <div class="slots" id="slots"></div>
     <p class="palLab">${S.planCheck?'시간표를 보고 알맞은 과목을 눌러요':'하고 싶은 과목을 골라 넣어요'}${pal.length>10?' · 아래로 내려 다른 과목도 봐요':''}</p>
     <div class="pal" id="pal" style="grid-template-columns:repeat(${pc},1fr);grid-auto-rows:minmax(82px,1fr)">${pal.map((s,i)=>`<button class="choice" data-i="${i}">${subjIcon(s)}<span>${esc(s)}</span></button>`).join('')}</div>`;
@@ -604,7 +606,7 @@ R.plan=m=>{
     slotSel=firstEmpty();drawSlots();setSay($('#say'),said.replace(/\.$/,''));speak(said);paintSteps();
     if(slotSel!==null)setTimeout(()=>{if(steps[cur].id==='plan'&&$('#slots'))setSay($('#say'),`${items[slotSel].n}교시는?`)},1600);
     else setTimeout(()=>{if(steps[cur].id==='plan'&&$('#say'))setSay($('#say'),'시간표를 다 채웠어요!')},1600)};
-  $('#clr').onclick=()=>{D.pick={};saveDay();slotSel=firstEmpty();drawSlots();paintSteps();ask()};
+  $('#clr').onclick=()=>showResetConfirm('고른 과목을 지울까요?','일과에서 고른 과목만 지워요. 1교시부터 다시 고를 수 있어요.','과목 처음부터',()=>{D.pick={};saveDay();slotSel=firstEmpty();drawSlots();paintSteps();ask()},$('#clr'));
   if(slotSel===null)setSay($('#say'),'시간표를 다 채웠어요!');else setSay($('#say'),`${items[slotSel].n}교시는?`);
   lastSay=slotSel===null?'오늘은 '+items.filter(x=>!x.lunch).map(x=>x.n+'교시 '+D.pick[items.indexOf(x)]).join(', ')+'.':`${items[slotSel].n}교시는 무엇을 배울까요?`;
 };
@@ -692,7 +694,18 @@ function go(i,talk){cur=Math.max(0,Math.min(steps.length-1,i));const m=$('#main'
 $('#steps').onclick=e=>{const b=e.target.closest('.chip');if(b)go(+b.dataset.i)};
 $('#prev').onclick=()=>go(cur-1);$('#next').onclick=()=>go(cur+1);
 $('#homeBtn').onclick=()=>go(0,false);
-document.addEventListener('keydown',e=>{if(!$('#sheet').hidden||/INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='ArrowRight'||e.key==='PageDown')go(cur+1);if(e.key==='ArrowLeft'||e.key==='PageUp')go(cur-1)});
+function showResetConfirm(title,details,actionLabel,onApply,returnFocus){
+  const overlay=document.createElement('div');overlay.className='transferOverlay';overlay.id='resetOverlay';
+  overlay.innerHTML=`<div class="transferPanel" role="dialog" aria-modal="true" aria-label="${esc(title)}"><h3>${esc(title)}</h3><p>${esc(details)}</p><div class="transferActions"><button class="btn" id="cancelReset">취소</button><button class="btn warn arm" id="applyReset">${esc(actionLabel)}</button></div></div>`;
+  $('#stage').appendChild(overlay);
+  const cancel=()=>{overlay.remove();returnFocus.focus()};
+  overlay.querySelector('#cancelReset').onclick=cancel;
+  overlay.querySelector('#applyReset').onclick=()=>{overlay.remove();onApply()};
+  overlay.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();cancel()}};
+  overlay.querySelector('#cancelReset').focus();
+}
+$('#resetBtn').onclick=()=>showResetConfirm('오늘 활동을 처음부터 할까요?','오늘의 날짜, 날씨, 출석, 기분, 일과, 급식 연습 기록이 지워져요. 반 이름과 시간표 등 선생님 설정은 그대로 남아요.','오늘 다시 시작',()=>{D=blankDay();saveDay();sel=null;slotSel=null;$('#writingOverlay')?.remove();go(0,false);toast('오늘 활동을 처음부터 시작해요')},$('#resetBtn'));
+document.addEventListener('keydown',e=>{if(!$('#sheet').hidden||$('#resetOverlay')||/INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='ArrowRight'||e.key==='PageDown')go(cur+1);if(e.key==='ArrowLeft'||e.key==='PageUp')go(cur-1)});
 $('#fsBtn').onclick=()=>{try{const p=document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();p&&p.catch&&p.catch(()=>toast('이 화면에서는 전체 화면을 쓸 수 없어요'))}catch(e){toast('이 화면에서는 전체 화면을 쓸 수 없어요')}};
 
 /* ---------- 선생님 ---------- */
