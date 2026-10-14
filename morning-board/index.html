@@ -153,7 +153,7 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 .slot.full{border-color:var(--leaf);box-shadow:0 5px 0 var(--leaf)}
 .slot.sel{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 5px 0 var(--accent);transform:translateY(-4px)}
 .palLab{font-size:20px;font-weight:700;color:var(--muted);margin:20px 0 8px;flex-shrink:0}
-.pal{display:grid;gap:12px;flex:1;min-height:0;overflow-y:auto;align-content:start;padding:2px 4px 8px}
+.pal{display:grid;gap:12px;flex:none;height:188px;box-sizing:border-box;min-height:0;overflow-y:auto;align-content:start;padding:2px 4px 8px}
 .pal .choice{grid-auto-flow:column;justify-content:start;gap:12px;padding:0 14px;border-radius:20px;font-size:28px;text-align:left;line-height:1.1;word-break:keep-all;min-width:0;overflow:hidden}
 .pal svg{width:56px;height:56px}
 .pal .choice.no{opacity:.3}
@@ -194,19 +194,23 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 .big h3{color:#AFC0DA}
 .big p{font-size:56px}
 .big p.cheer{font-family:var(--display);font-size:34px;color:var(--sun);line-height:1.2}
-.mid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:100px minmax(0,1fr) 106px;gap:16px;min-height:0}
+.mid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:124px minmax(0,1fr) 120px;gap:16px;min-height:0}
 .mid .wide{grid-column:span 2}
-.todayLessons{display:flex;flex-direction:column}
+.mid .box:last-child{padding:11px 18px}
+.mid .box:last-child p.two{font-size:25px;line-height:1.15;-webkit-line-clamp:2}
+.todayLessons{display:flex;flex-direction:column;padding:10px 16px}
 .todayLessons h3{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .todayLessons h3 small{font-size:16px;font-weight:700;color:var(--leaf);letter-spacing:0}
-.lessonList{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(43px,1fr);gap:7px;flex:1;min-height:0;overflow:auto}
+.lessonList{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(40px,1fr);gap:6px;flex:1;min-height:0;overflow:auto}
 .lesson{display:flex;align-items:center;gap:8px;min-width:0;padding:4px 9px;border-radius:13px;background:var(--paper);font-family:var(--display);font-size:23px;line-height:1.1}
 .lesson.chosen{background:var(--leaf-soft);box-shadow:inset 0 0 0 2px var(--leaf)}
 .lesson b{font-family:var(--body);font-size:16px;white-space:nowrap}
 .lesson span{min-width:0;overflow-wrap:anywhere}
 .lesson em{margin-left:auto;color:var(--leaf);font-style:normal;font-size:22px}
-.wx{display:flex;align-items:center;gap:8px}
-.wx svg{width:56px;height:56px;flex-shrink:0}
+.mid .wx{display:flex;align-items:center;gap:6px;font-size:24px;line-height:1.15}
+.wx svg{width:46px;height:46px;flex-shrink:0}
+.wx span{min-width:0;word-break:keep-all}
+.sum>.box:last-child{overflow-y:auto}
 .mlist{display:flex;flex-direction:column;gap:8px;margin-top:4px}
 .mlist>div{display:flex;align-items:center;gap:10px;font-family:var(--display);font-size:26px;min-width:0}
 .mlist svg{width:46px;height:46px;flex-shrink:0}
@@ -675,7 +679,7 @@ R.sum=m=>{
         <div class="box"><h3>날씨</h3><p class="wx">${w?wIcon(w.k)+`<span>${w.n}${f?' · '+f.t:''}</span>`:'아직 안 골랐어요'}</p></div>
         <div class="box"><h3>출석</h3><p>${a}명 / ${S.kids.length}명</p></div>
         <div class="box wide todayLessons"><h3>오늘 배워요 <small>✓ 일과에서 고른 과목</small></h3><div class="lessonList">${learned.length?learned.map(x=>`<div class="lesson ${x.chosen?'chosen':''}"><b>${x.period}교시</b><span>${esc(x.subject)}</span>${x.chosen?'<em aria-label="골랐어요">✓</em>':''}</div>`).join(''):'쉬는 날'}</div></div>
-        <div class="box wide"><h3>점심</h3><p class="two">${ds.length?ds.slice(0,4).map(x=>esc(x.name)).join(' · ')+(ds.length>4?` <span style="color:var(--muted)">외 ${ds.length-4}가지</span>`:''):'없음'}</p></div>
+        <div class="box wide"><h3>점심</h3><p class="two">${ds.length?ds.slice(0,3).map(x=>esc(x.name)).join(' · ')+(ds.length>3?` <span style="color:var(--muted)">외 ${ds.length-3}가지</span>`:''):'없음'}</p></div>
       </div>
       <div class="box"><h3>우리 반 기분</h3>${groups.length?`<div class="mlist">${groups.map(g=>`<div>${face(g.md.k)}<span class="mt"><span>${g.md.t} ${g.ks.length}명</span><small>${g.ks.map(esc).join(', ')}</small></span></div>`).join('')}</div>`:'<p style="font-size:28px">아직 안 골랐어요</p>'}</div>
     </div>`;
