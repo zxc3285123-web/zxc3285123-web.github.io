@@ -196,9 +196,8 @@ main:has(.eventRow){overflow-y:auto}
 
 /* 급식 */
 .mealWeek{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:12px;flex-shrink:0}
-.mealDay{height:86px;min-width:0;padding:9px 12px;border:3px solid var(--line);border-radius:19px;background:var(--card);display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:3px;text-align:left;box-shadow:0 4px 0 var(--line)}
+.mealDay{height:72px;min-width:0;padding:9px 12px;border:3px solid var(--line);border-radius:19px;background:var(--card);display:flex;align-items:center;justify-content:center;text-align:center;box-shadow:0 4px 0 var(--line)}
 .mealDay strong{font-family:var(--display);font-size:27px;font-weight:400;white-space:nowrap}
-.mealDay small{font-size:16px;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .mealDay.pick{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 4px 0 var(--accent)}
 .tray{display:grid;gap:16px;margin-top:20px}
 .dish{background:var(--card);border:4px solid var(--line);border-radius:24px;padding:12px 16px;display:flex;gap:14px;align-items:center;text-align:left;box-shadow:0 5px 0 var(--line);min-width:0;overflow:hidden}
@@ -382,7 +381,7 @@ main:has(.eventRow){overflow-y:auto}
   .planBottom{grid-template-columns:minmax(230px,1fr) minmax(0,2fr);flex:none}.planPanel{padding:12px}.dismiss button{min-height:52px;font-size:17px}
   .pal{grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-auto-rows:70px!important;height:auto;max-height:none;overflow:visible;gap:9px}.pal .choice{font-size:21px;padding:0 8px;gap:5px}.pal svg{width:42px;height:42px;flex-shrink:0}
   .tray{grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-auto-rows:minmax(125px,auto)!important;gap:9px}.dish{padding:8px;gap:6px}.dish svg{width:55px;height:55px}.dish b{font-size:clamp(18px,2.5vw,25px)!important}
-  .mealWeek{gap:7px}.mealDay{height:72px;padding:7px}.mealDay strong{font-size:21px}.mealDay small{font-size:13px}
+  .mealWeek{gap:7px}.mealDay{height:72px;padding:7px}.mealDay strong{font-size:21px}
   .sum{grid-template-columns:minmax(0,1fr);gap:12px}.big{min-height:160px;flex-direction:row;align-items:center}.big p{font-size:36px}.big p.cheer{font-size:27px;text-align:right}
   .sum.hasEvent{grid-template-rows:none}.sum.hasEvent .big p{font-size:36px}.sum.hasEvent .big p.cheer{font-size:27px}.sum.hasEvent .mid{grid-template-rows:110px minmax(180px,auto) 110px;gap:12px}
   .eventReview{min-height:120px}.eventReview h3{flex-basis:115px;font-size:20px}
@@ -818,7 +817,7 @@ R.lunch=m=>{
      error:am.error||'학교 급식을 불러오지 못했어요. 잠시 후 다시 열어 주세요.',
      noday:'이 날짜에는 학교 급식 정보가 없어요.'}[am.state]||'';
   m.innerHTML=`<div class="qrow"><div><h1 class="q">${weekly?'이번 주 점심은 무엇일까요?':'오늘 점심은 무엇일까요?'}</h1><p class="sub">${weekly?'날짜를 누르면 그날 메뉴가 나와요. ':''}메뉴를 누르면 따라 쓰기가 열려요${src?' · '+src:''}</p></div><div class="say" id="say"></div></div>
-    ${weekly?`<div class="mealWeek" id="mealWeek">${weekDates.map(day=>{const a=autoMeal(day.key),first=a?.state==='ok'?parseDish(a.lines[0]||'').name:a?.state==='noday'?'급식 정보 없음':a?.state==='error'?'다시 불러오기':'불러오는 중';return `<button class="mealDay ${day.key===dateKey?'pick':''}" data-date="${day.key}" aria-pressed="${day.key===dateKey}" aria-label="${day.month}월 ${day.day}일 ${WD[day.weekday]}요일, ${esc(first)}"><strong>${day.month}/${day.day} ${WD[day.weekday]}요일</strong><small>${esc(first)}</small></button>`}).join('')}</div>`:''}
+    ${weekly?`<div class="mealWeek" id="mealWeek">${weekDates.map(day=>`<button class="mealDay ${day.key===dateKey?'pick':''}" data-date="${day.key}" aria-pressed="${day.key===dateKey}" aria-label="${day.month}월 ${day.day}일 ${WD[day.weekday]}요일"><strong>${day.month}/${day.day} ${WD[day.weekday]}요일</strong></button>`).join('')}</div>`:''}
     <div class="tray" id="tray" style="grid-template-columns:repeat(${cols},1fr);grid-auto-rows:${dh}px">${ds.map((x,i)=>`<button class="dish ${practice.dishes[i]?'seen':''}" data-i="${i}" aria-label="${esc(x.name)} 따라 쓰기 열기">${dishIcon(i,ic)}<span class="tx"><b style="font-size:${nfOf(x.name)}px">${esc(x.name)}</b></span></button>`).join('')||`<p class="rest" style="grid-column:1/-1;font-size:40px;margin-top:40px">${empty}</p>`}</div>`;
   if(weekly)$('#mealWeek').onclick=e=>{const b=e.target.closest('button[data-date]');if(!b)return;lunchDate=b.dataset.date;if(mealByDate[lunchDate]?.state==='error')delete mealByDate[lunchDate];go(cur,false);const d=weekDates.find(x=>x.key===lunchDate);speak(`${d.month}월 ${d.day}일 ${WD[d.weekday]}요일 급식이에요.`)};
   const openPractice=i=>{
