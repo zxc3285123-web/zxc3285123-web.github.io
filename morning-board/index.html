@@ -156,7 +156,10 @@ main{position:relative;padding:28px 40px;overflow:hidden;display:flex;flex-direc
 .slot .ic svg{width:44px;height:44px}
 .slot .ic.empty{border:4px dashed var(--no);border-radius:50%;font-family:var(--display);font-size:40px;color:var(--no)}
 .slot .s{font-family:var(--display);font-size:20px;text-align:center;line-height:1.1;word-break:keep-all;overflow-wrap:anywhere;max-height:44px;overflow:hidden}
-.slot .inkPreview{display:block;width:100%;height:70px;object-fit:contain}
+.slotWriteArea{position:relative;display:flex;flex:1;width:100%;min-height:0;align-items:center;justify-content:center}
+.slotCardContent{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.slotCanvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.slot.writing .slotCardContent{visibility:hidden}
 .slot.lunch{background:var(--accent-soft);border-color:#F6B48C;box-shadow:0 5px 0 #F6B48C}
 .slot.full{border-color:var(--leaf);box-shadow:0 5px 0 var(--leaf)}
 .slot.sel{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 5px 0 var(--accent);transform:translateY(-4px)}
@@ -770,19 +773,24 @@ R.plan=m=>{
   const firstEmpty=()=>{const i=items.findIndex((x,i)=>!x.lunch&&!D.pick[i]&&!hasPlanInk(i));return i<0?null:i};
   if(slotSel===null||slotSel>=items.length||items[slotSel].lunch)slotSel=firstEmpty();
   const pc=Math.min(6,Math.max(1,Math.ceil(pal.length/(pal.length>12?3:pal.length>6?2:1))));
-  m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘은 무엇을 배울까요?</h1></div><div class="say" id="say"></div><button class="mini-btn" id="writeSubject">과목 글씨 쓰기</button><button class="mini-btn" id="clr">과목 처음부터</button></div>
+  m.innerHTML=`<div class="qrow"><div><h1 class="q">오늘은 무엇을 배울까요?</h1></div><div class="say" id="say"></div><button class="mini-btn" id="eraseSubject">이 교시 지우기</button><button class="mini-btn" id="clr">과목 처음부터</button></div>
     <div class="slots" id="slots"></div>
     ${eventEditorHTML()}
     <div class="planBottom">
       <section class="planPanel"><h2>오늘 하교 시간</h2><div class="dismiss" id="dismiss">${[5,6,7].map(n=>`<button type="button" data-period="${n}" class="${D.dismissal===n?'pick':''}" aria-pressed="${D.dismissal===n}"><span>${n}교시</span><span>${DISMISS[n]}</span></button>`).join('')}</div></section>
-      <section class="planPanel"><h2>과목 카드</h2><p class="palLab">${S.planCheck?'시간표를 보고 알맞은 과목을 눌러요':'하고 싶은 과목을 골라 넣어요'}</p><div class="pal ${pal.length>12?'dense':''}" id="pal" style="grid-template-columns:repeat(${pc},minmax(0,1fr));grid-auto-rows:${pal.length>12?50:60}px">${pal.map((s,i)=>`<button class="choice" data-i="${i}">${subjIcon(s)}<span>${esc(s)}</span></button>`).join('')}</div></section>
+      <section class="planPanel"><h2>과목 카드</h2><p class="palLab">교시 칸에 바로 쓰거나, 과목 카드를 눌러요.</p><div class="pal ${pal.length>12?'dense':''}" id="pal" style="grid-template-columns:repeat(${pc},minmax(0,1fr));grid-auto-rows:${pal.length>12?50:60}px">${pal.map((s,i)=>`<button class="choice" data-i="${i}">${subjIcon(s)}<span>${esc(s)}</span></button>`).join('')}</div></section>
     </div>`;
+  const paintSlot=(canvas,paths)=>{const ctx=canvas.getContext('2d'),dpr=window.devicePixelRatio||1;ctx.clearRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#1E2944';ctx.fillStyle='#1E2944';ctx.lineWidth=5*dpr;ctx.lineCap='round';ctx.lineJoin='round';
+    paths.forEach(path=>{if(!path.length)return;if(path.length===1){ctx.beginPath();ctx.arc(path[0][0]*canvas.width,path[0][1]*canvas.height,2.5*dpr,0,Math.PI*2);ctx.fill();return}
+      ctx.beginPath();path.forEach(([px,py],j)=>j?ctx.lineTo(px*canvas.width,py*canvas.height):ctx.moveTo(px*canvas.width,py*canvas.height));ctx.stroke()})};
+  const sizeSlotCanvases=()=>{$('#slots')?.querySelectorAll('.slotCanvas').forEach(canvas=>{const r=canvas.getBoundingClientRect();if(!r.width||!r.height)return;const dpr=window.devicePixelRatio||1;canvas.width=Math.round(r.width*dpr);canvas.height=Math.round(r.height*dpr);paintSlot(canvas,D.planInk[canvas.closest('.slot').dataset.i]?.paths||[])})};
   const drawSlots=()=>{
     $('#slots').innerHTML=items.map((x,i)=>{const v=x.lunch?x.ans:D.pick[i],ink=!x.lunch&&hasPlanInk(i)?D.planInk[i]:null;
-      return `<button class="slot ${x.lunch?'lunch':''} ${(v||ink)&&!x.lunch?'full':''} ${i===slotSel?'sel':''}" data-i="${i}" aria-label="${x.lunch?'점심':x.n+'교시 '+(ink?'손글씨로 썼어요':v||'과목을 골라요')}"><span class="n">${x.lunch?'점심':x.n+'교시'}</span>${ink?`<img class="inkPreview" src="${handwritingImage(ink)}" alt="">`:`<span class="ic ${v?'':'empty'}">${v?subjIcon(v):'?'}</span><span class="s">${v?esc(v):'&nbsp;'}</span>`}</button>`}).join('');
+      return `<button class="slot ${x.lunch?'lunch':''} ${(v||ink)&&!x.lunch?'full':''} ${i===slotSel?'sel':''} ${ink?'writing':''}" data-i="${i}" aria-label="${x.lunch?'점심':x.n+'교시 '+(ink?'손글씨로 썼어요':v||'과목을 골라요')}"><span class="n">${x.lunch?'점심':x.n+'교시'}</span><span class="slotWriteArea"><span class="slotCardContent"><span class="ic ${v?'':'empty'}">${v?subjIcon(v):'?'}</span><span class="s">${v?esc(v):'&nbsp;'}</span></span>${x.lunch?'':`<canvas class="slotCanvas" aria-hidden="true"></canvas>`}</span></button>`}).join('');
     $('#pal').classList.toggle('off',slotSel===null);
-    [...$('#pal').children].forEach(b=>b.classList.remove('no'))};
+    [...$('#pal').children].forEach(b=>b.classList.remove('no'));sizeSlotCanvases()};
   drawSlots();
+  const slotsElement=$('#slots');const slotObserver=new ResizeObserver(()=>{if(!slotsElement.isConnected){slotObserver.disconnect();return}sizeSlotCanvases()});slotObserver.observe(slotsElement);
   bindEventEditor();
   $('#dismiss').onclick=e=>{const b=e.target.closest('button[data-period]');if(!b)return;const picked=Number(b.dataset.period),expected=expectedDismissal();
     if(expected&&picked!==expected){b.classList.add('try');setTimeout(()=>b.classList.remove('try'),1200);const line='다시 해 봐요. 시간표의 마지막 교시를 확인해요.';setSay($('#say'),line,false);speak(line);return}
@@ -791,34 +799,21 @@ R.plan=m=>{
     const line=`오늘은 ${D.dismissal}교시가 끝나는 ${DISMISS[D.dismissal]}에 하교해요.`;setSay($('#say'),line);speak(`오늘은 ${D.dismissal}교시가 끝나는 ${DISMISS_SAY[D.dismissal]}에 하교해요.`);paintSteps()};
   const ask=()=>{if(slotSel===null){const l='시간표를 다 채웠어요!';setSay($('#say'),l);speak('시간표를 다 채웠어요. 잘했어요.');return}
     const t=`${items[slotSel].n}교시는 무엇을 배울까요?`;setSay($('#say'),`${items[slotSel].n}교시는?`);speak(t)};
-  $('#writeSubject').onclick=()=>{
-    if(slotSel===null){setSay($('#say'),'교시를 먼저 눌러요');speak('글씨를 쓸 교시를 먼저 눌러요.');return}
-    const i=slotSel,x=items[i],saved=D.planInk[i];let paths=saved?.name===x.ans&&Array.isArray(saved.paths)?saved.paths.map(path=>path.map(point=>[...point])):[];
-    const overlay=document.createElement('div');overlay.className='writingOverlay';overlay.id='planWritingOverlay';
-    overlay.innerHTML=`<div class="writingPanel" role="dialog" aria-modal="true" aria-label="${x.n}교시 과목 글씨 쓰기"><div class="writingHead"><h2>${x.n}교시 과목을 써요</h2><button id="planWritingClose" type="button">닫기</button></div><p>시간표의 과목을 손가락이나 펜으로 써요.</p><div class="writingSurface"><canvas class="writingCanvas" id="planWritingCanvas" aria-label="${x.n}교시 과목을 쓰는 자리"></canvas></div><div class="writingActions"><button id="planWritingClear" type="button">글씨 지우기</button><button class="nextDish" id="planWritingSave" type="button">저장하고 돌아가기</button></div></div>`;
-    $('#stage').appendChild(overlay);
-    const canvas=overlay.querySelector('canvas'),dpr=window.devicePixelRatio||1;
-    canvas.width=Math.round(canvas.clientWidth*dpr);canvas.height=Math.round(canvas.clientHeight*dpr);
-    const render=()=>{const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#1E2944';ctx.fillStyle='#1E2944';ctx.lineWidth=7*dpr;ctx.lineCap='round';ctx.lineJoin='round';
-      paths.forEach(path=>{if(!path.length)return;if(path.length===1){ctx.beginPath();ctx.arc(path[0][0]*canvas.width,path[0][1]*canvas.height,3.5*dpr,0,Math.PI*2);ctx.fill();return}
-        ctx.beginPath();path.forEach(([px,py],j)=>j?ctx.lineTo(px*canvas.width,py*canvas.height):ctx.moveTo(px*canvas.width,py*canvas.height));ctx.stroke()})};
-    render();let active=null;
-    const addPoint=e=>{const r=canvas.getBoundingClientRect(),point=[Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))];const prev=active[active.length-1];if(!prev||Math.hypot(point[0]-prev[0],point[1]-prev[1])>.004){active.push(point);render()}};
-    canvas.onpointerdown=e=>{e.preventDefault();canvas.setPointerCapture(e.pointerId);active=[];paths.push(active);addPoint(e)};
-    canvas.onpointermove=e=>{if(active){e.preventDefault();addPoint(e)}};
-    canvas.onpointerup=canvas.onpointercancel=()=>{active=null};
-    const close=()=>{overlay.remove();$('#writeSubject').focus()};
-    overlay.querySelector('#planWritingClose').onclick=close;
-    overlay.querySelector('#planWritingClear').onclick=()=>{paths=[];render();speak('지우고 다시 써 봐요.')};
-    overlay.querySelector('#planWritingSave').onclick=()=>{const written=paths.some(path=>path.length);
-      if(written){D.planInk[i]={name:x.ans,paths,ratio:canvas.clientWidth/canvas.clientHeight};delete D.pick[i]}
-      else delete D.planInk[i];
-      saveDay();slotSel=firstEmpty();drawSlots();paintSteps();close();
-      const line=written?`${x.n}교시 글씨를 저장했어요`:'글씨를 지웠어요';setSay($('#say'),line);speak(line)};
-    overlay.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();close()}};
-    overlay.querySelector('#planWritingClose').focus();
-  };
-  $('#slots').onclick=e=>{const b=e.target.closest('.slot');if(!b)return;const i=+b.dataset.i,x=items[i];
+  let stroke=null,suppressSlotClick=false;
+  const pointFor=(e,canvas)=>{const r=canvas.getBoundingClientRect();return[Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))]};
+  $('#slots').onpointerdown=e=>{const canvas=e.target.closest('.slotCanvas');if(!canvas||stroke)return;
+    const i=+canvas.closest('.slot').dataset.i;stroke={id:e.pointerId,i,canvas,startX:e.clientX,startY:e.clientY,paths:(D.planInk[i]?.paths||[]).map(path=>path.map(point=>[...point])),active:null};canvas.setPointerCapture(e.pointerId)};
+  $('#slots').onpointermove=e=>{if(!stroke||e.pointerId!==stroke.id)return;
+    const s=stroke;
+    if(!s.active){if(Math.hypot(e.clientX-s.startX,e.clientY-s.startY)<7)return;
+      s.active=[pointFor({clientX:s.startX,clientY:s.startY},s.canvas)];s.paths.push(s.active);s.canvas.closest('.slot').classList.add('writing')}
+    e.preventDefault();const point=pointFor(e,s.canvas),prev=s.active[s.active.length-1];if(Math.hypot(point[0]-prev[0],point[1]-prev[1])>.004){s.active.push(point);paintSlot(s.canvas,s.paths)}};
+  const finishStroke=e=>{if(!stroke||e.pointerId!==stroke.id)return;const s=stroke;stroke=null;if(!s.active)return;
+    const point=pointFor(e,s.canvas),prev=s.active[s.active.length-1];if(Math.hypot(point[0]-prev[0],point[1]-prev[1])>.004)s.active.push(point);
+    D.planInk[s.i]={name:items[s.i].ans,paths:s.paths,ratio:s.canvas.clientWidth/s.canvas.clientHeight};delete D.pick[s.i];saveDay();slotSel=s.i;
+    suppressSlotClick=true;drawSlots();paintSteps();setSay($('#say'),`${items[s.i].n}교시 글씨를 썼어요`);setTimeout(()=>{suppressSlotClick=false},300)};
+  $('#slots').onpointerup=finishStroke;$('#slots').onpointercancel=finishStroke;
+  $('#slots').onclick=e=>{if(suppressSlotClick)return;const b=e.target.closest('.slot');if(!b)return;const i=+b.dataset.i,x=items[i];
     if(x.lunch){speak('점심시간이에요.');setSay($('#say'),'점심시간이에요');return}
     slotSel=i;drawSlots();if(hasPlanInk(i)){setSay($('#say'),`${x.n}교시는 손글씨로 썼어요`);speak(`${x.n}교시는 손글씨로 썼어요.`)}else if(D.pick[i]){setSay($('#say'),`${x.n}교시는 ${D.pick[i]}`);speak(`${x.n}교시는 ${ieyo(D.pick[i])}.`)}else ask()};
   $('#pal').onclick=e=>{const b=e.target.closest('.choice');if(!b||slotSel===null)return;const s=pal[+b.dataset.i],x=items[slotSel];
@@ -827,6 +822,8 @@ R.plan=m=>{
     slotSel=firstEmpty();drawSlots();setSay($('#say'),said.replace(/\.$/,''));speak(said);paintSteps();
     if(slotSel!==null)setTimeout(()=>{if(steps[cur].id==='plan'&&$('#slots'))setSay($('#say'),`${items[slotSel].n}교시는?`)},1600);
     else setTimeout(()=>{if(steps[cur].id==='plan'&&$('#say'))setSay($('#say'),'시간표를 다 채웠어요!')},1600)};
+  $('#eraseSubject').onclick=()=>{if(slotSel===null){setSay($('#say'),'지울 교시를 눌러요');speak('지울 교시를 눌러요.');return}
+    const i=slotSel;delete D.pick[i];delete D.planInk[i];saveDay();drawSlots();paintSteps();setSay($('#say'),`${items[i].n}교시를 지웠어요`);speak(`${items[i].n}교시를 지웠어요.`)};
   $('#clr').onclick=()=>showResetConfirm('과목을 처음부터 할까요?','고른 과목과 쓴 글씨를 지워요. 1교시부터 다시 시작해요.','과목 처음부터',()=>{D.pick={};D.planInk={};saveDay();slotSel=firstEmpty();drawSlots();paintSteps();ask()},$('#clr'));
   if(slotSel===null)setSay($('#say'),'시간표를 다 채웠어요!');else setSay($('#say'),`${items[slotSel].n}교시는?`);
   lastSay=slotSel===null?'오늘은 '+items.filter(x=>!x.lunch).map(x=>x.n+'교시 '+(hasPlanInk(items.indexOf(x))?'손글씨':D.pick[items.indexOf(x)])).join(', ')+'.':`${items[slotSel].n}교시는 무엇을 배울까요?`;
