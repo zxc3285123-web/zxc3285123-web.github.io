@@ -2,3 +2,5 @@ User-agent: *
 Allow: /
 
 Sitemap: https://zxc3285123-web.github.io/sitemap.xml
+Sitemap: https://zxc3285123-web.github.io/cartax/sitemap.xml
+Sitemap: https://zxc3285123-web.github.io/loan/sitemap.xml

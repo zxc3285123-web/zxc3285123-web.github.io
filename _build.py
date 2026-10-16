@@ -745,6 +745,8 @@ f"""User-agent: *
 Allow: /
 
 Sitemap: {SITE_URL}/sitemap.xml
+Sitemap: {SITE_URL}/cartax/sitemap.xml
+Sitemap: {SITE_URL}/loan/sitemap.xml
 """, encoding="utf-8")
 
 urls = "\n".join(
