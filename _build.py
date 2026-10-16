@@ -20,7 +20,8 @@ def fill(t):
              .replace("[사이트명]", SITE_NAME))
 # ─────────────────────────────────────────────
 SITE_DESC = "항공 수하물 규정을 항공사별로 비교하고 품목별 기내·위탁·반입금지를 바로 알려주는 여행 준비 사이트"
-TODAY = "2026-09-11"
+import datetime as _dt
+TODAY = _dt.date.today().isoformat()  # 빌드한 날짜가 사이트맵 lastmod로 들어감
 
 CLOUDS = ('<svg viewBox="0 0 1000 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true">'
  '<g fill="var(--surface)" opacity=".5">'
