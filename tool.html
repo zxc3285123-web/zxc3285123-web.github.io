@@ -562,7 +562,7 @@
 <p style="display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 8px"><a class="btn ghost" href="#cat-1">전자·배터리</a> <a class="btn ghost" href="#cat-2">액체·화장품</a> <a class="btn ghost" href="#cat-3">식품</a> <a class="btn ghost" href="#cat-4">날붙이·공구</a> <a class="btn ghost" href="#cat-5">스포츠·레저</a> <a class="btn ghost" href="#cat-6">의약·의료</a> <a class="btn ghost" href="#cat-7">위험물</a> <a class="btn ghost" href="#cat-8">유아·반려</a> <a class="btn ghost" href="#cat-9">의류·생활</a> <a class="btn ghost" href="#cat-10">기타·귀중품</a></p>
 <h3 id="cat-1" style="scroll-margin-top:110px;font-size:19px;margin-top:34px">전자·배터리 <span style="color:var(--muted);font-weight:400;font-size:14px">61개</span></h3>
 <div class="tablewrap"><table><thead><tr><th style="min-width:140px">품목</th><th style="width:56px">기내</th><th style="width:56px">위탁</th><th>판정과 조건</th></tr></thead><tbody>
-<tr><td>🔋 <a href="item/power-bank.html">보조배터리</a></td><td class="num"><span class="mk o">○</span></td><td class="num"><span class="mk x">✕</span></td><td><strong>기내만 가능</strong> — 위탁은 <em>절대 불가</em>. 100Wh 미만 5개, 100~160Wh는 카운터 승인 후 2개까지. 선반 보관·기내 충전 금지.</td></tr>
+<tr><td>🔋 <a href="item/power-bank.html">보조배터리</a></td><td class="num"><span class="mk o">○</span></td><td class="num"><span class="mk x">✕</span></td><td><strong>기내만 가능</strong> — 위탁은 <em>절대 불가</em>. 용량과 관계없이 <em>1인당 2개</em>까지(160Wh 이하, 100~160Wh는 항공사 승인). 선반 보관 금지, 기내 사용·충전 금지.</td></tr>
 <tr><td>💻 <a href="item/laptop.html">노트북</a></td><td class="num"><span class="mk o">○</span></td><td class="num"><span class="mk o">○</span></td><td><strong>기내 · 위탁 모두 가능</strong> — 기내 반입 권장. 보안검색 때 가방에서 꺼내야 하고, 위탁 시 파손 보상이 어려워요.</td></tr>
 <tr><td>📱 <a href="item/tablet-ipad.html">태블릿 · 아이패드</a></td><td class="num"><span class="mk o">○</span></td><td class="num"><span class="mk o">○</span></td><td><strong>기내 · 위탁 모두 가능</strong> — 기내 반입 권장. 위탁할 경우 전원을 완전히 끄세요.</td></tr>
 <tr><td>📲 <a href="item/smartphone.html">스마트폰</a></td><td class="num"><span class="mk o">○</span></td><td class="num"><span class="mk o">○</span></td><td><strong>기내 · 위탁 모두 가능</strong> — 기내 반입 권장. 위탁 시 전원을 완전히 꺼야 합니다.</td></tr>
@@ -1035,7 +1035,7 @@
   };
 
     const ITEMS = [
-    {n:"보조배터리", e:"🔋", c:"전자·배터리", v:"cabin", ox:"○✕", k:"파워뱅크 충전기 배터리팩 대용량 외장배터리 휴대용충전기 20000mah 보조밧데리 powerbank 10000mah 충전기배터리", d:"위탁은 <em>절대 불가</em>. 100Wh 미만 5개, 100~160Wh는 카운터 승인 후 2개까지. 선반 보관·기내 충전 금지.", u:"power-bank", calc:"wh"},
+    {n:"보조배터리", e:"🔋", c:"전자·배터리", v:"cabin", ox:"○✕", k:"파워뱅크 충전기 배터리팩 대용량 외장배터리 휴대용충전기 20000mah 보조밧데리 powerbank 10000mah 충전기배터리", d:"위탁은 <em>절대 불가</em>. 용량과 관계없이 <em>1인당 2개</em>까지(160Wh 이하, 100~160Wh는 항공사 승인). 선반 보관 금지, 기내 사용·충전 금지.", u:"power-bank", calc:"wh"},
     {n:"노트북", e:"💻", c:"전자·배터리", v:"both", ox:"○○", k:"랩탑 맥북 그램 laptop 컴퓨터 피시 맥북에어 맥북프로 울트라북 노트북컴퓨터", d:"기내 반입 권장. 보안검색 때 가방에서 꺼내야 하고, 위탁 시 파손 보상이 어려워요.", u:"laptop"},
     {n:"태블릿 · 아이패드", e:"📱", c:"전자·배터리", v:"both", ox:"○○", k:"아이패드 갤탭 패드 tablet 아이패드프로 갤럭시탭 타블렛 ipad", d:"기내 반입 권장. 위탁할 경우 전원을 완전히 끄세요.", u:"tablet-ipad"},
     {n:"스마트폰", e:"📲", c:"전자·배터리", v:"both", ox:"○○", k:"핸드폰 휴대폰 아이폰 갤럭시 폰 스마트폰 전화기 iphone", d:"기내 반입 권장. 위탁 시 전원을 완전히 꺼야 합니다.", u:"smartphone"},
@@ -1560,8 +1560,8 @@
     const wh = (mah * volt) / 1000;
     let msg;
     if (!isFinite(wh) || wh <= 0) return { wh:0, msg:"용량을 입력해 주세요." };
-    if (wh < 100) msg = "100Wh 미만 — 별도 승인 없이 <b>최대 5개</b>까지 기내 반입 OK";
-    else if (wh <= 160) msg = "100~160Wh — 카운터에서 <b>승인 스티커</b>를 받으면 <b>2개</b>까지 기내 반입";
+    if (wh < 100) msg = "100Wh 미만 — 별도 승인 없이 기내 반입 OK (보조배터리는 <b>1인당 2개</b>까지)";
+    else if (wh <= 160) msg = "100~160Wh — 카운터에서 <b>승인 스티커</b>를 받으면 기내 반입 (보조배터리는 <b>1인당 2개</b>까지)";
     else msg = "160Wh 초과 — 기내·위탁 <b>모두 반입 불가</b>";
     return { wh, msg };
   }

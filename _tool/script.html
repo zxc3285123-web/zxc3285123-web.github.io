@@ -202,8 +202,8 @@
     const wh = (mah * volt) / 1000;
     let msg;
     if (!isFinite(wh) || wh <= 0) return { wh:0, msg:"용량을 입력해 주세요." };
-    if (wh < 100) msg = "100Wh 미만 — 별도 승인 없이 <b>최대 5개</b>까지 기내 반입 OK";
-    else if (wh <= 160) msg = "100~160Wh — 카운터에서 <b>승인 스티커</b>를 받으면 <b>2개</b>까지 기내 반입";
+    if (wh < 100) msg = "100Wh 미만 — 별도 승인 없이 기내 반입 OK (보조배터리는 <b>1인당 2개</b>까지)";
+    else if (wh <= 160) msg = "100~160Wh — 카운터에서 <b>승인 스티커</b>를 받으면 기내 반입 (보조배터리는 <b>1인당 2개</b>까지)";
     else msg = "160Wh 초과 — 기내·위탁 <b>모두 반입 불가</b>";
     return { wh, msg };
   }
