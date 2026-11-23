@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="한글 HWP·HWPX를 브라우저에서 바로 PDF로 변환하고 다운로드하세요.">
   <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'unsafe-inline'; connect-src https://sanguneo.github.io https://cdn.jsdelivr.net https://raw.githubusercontent.com; worker-src blob:; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-K11YRxPYm+pCGFFV8Wam7cspDqXd4FvvobQSehIXb/s=' 'sha256-+6kVUGJjskSIEgqdar+d5fGmjOvEkQvGzCMWyxxBEwk=' 'strict-dynamic' 'unsafe-inline' 'wasm-unsafe-eval' https:; style-src 'unsafe-inline' https:; connect-src https:; worker-src blob: https://cdn.jsdelivr.net; font-src blob: data: https:; img-src blob: data: https:; frame-src https:; base-uri 'none'; form-action 'none'">
   <title>한글 PDF 변환</title>
   <style>
     :root { font-family: system-ui, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; color: #14243d; background: #f2f6ff; color-scheme: light; }
@@ -52,6 +52,15 @@
     @media (max-width: 450px) { header, footer { width: calc(100% - 36px); } header { min-height: 62px; } .intro { font-size: .95rem; } }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
   </style>
+  <script>
+  (() => {
+    const script = document.createElement('script');
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8544439780701521';
+    document.head.append(script);
+  })();
+  </script>
 </head>
 <body>
   <header>
@@ -82,7 +91,7 @@
     </section>
     <p class="note">문서는 브라우저 안에서만 처리됩니다.<br>글꼴이나 복잡한 서식은 원본과 다르게 표시될 수 있습니다. <a href="https://sanguneo.github.io/rhwptopdf/" rel="noreferrer" id="fallback" hidden>변환 엔진 데모 열기</a></p>
   </main>
-  <footer>변환 엔진 <a href="https://github.com/sanguneo/rhwptopdf" rel="noreferrer">rhwptopdf</a></footer>
+  <footer>변환 엔진 <a href="https://github.com/sanguneo/rhwptopdf" rel="noreferrer">rhwptopdf</a> · <a href="./guide.html#privacy">개인정보 및 광고 안내</a></footer>
   <noscript>파일을 변환하려면 브라우저에서 JavaScript를 켜 주세요.</noscript>
   <script id="engine-source" type="text/plain">
 // rhwptopdf UMD bundle.

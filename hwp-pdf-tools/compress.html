@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="사진과 PDF의 용량을 줄이고 압축 전후 크기를 비교하세요.">
   <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; connect-src https://cdn.jsdelivr.net; worker-src blob: https://cdn.jsdelivr.net; font-src blob: data:; img-src blob: data:; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-wulrYr4+1Dd01X2nL2QxtjT5wlQ/ir4/IxiZk6Ckdcs=' 'sha256-+6kVUGJjskSIEgqdar+d5fGmjOvEkQvGzCMWyxxBEwk=' 'strict-dynamic' 'unsafe-inline' 'wasm-unsafe-eval' https:; style-src 'unsafe-inline' https:; connect-src https:; worker-src blob: https://cdn.jsdelivr.net; font-src blob: data: https:; img-src blob: data: https:; frame-src https:; base-uri 'none'; form-action 'none'">
   <title>사진 용량 줄이기</title>
   <style>
     :root { font-family: system-ui, "Malgun Gothic", sans-serif; color: #14243d; background: #f2f6ff; color-scheme: light; }
@@ -39,6 +39,15 @@
     .download { margin-top: 11px; }
     [hidden] { display: none !important; }
   </style>
+  <script>
+  (() => {
+    const script = document.createElement('script');
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8544439780701521';
+    document.head.append(script);
+  })();
+  </script>
 </head>
 <body>
   <header>
@@ -74,6 +83,7 @@
       </div>
       <noscript>파일을 압축하려면 브라우저에서 JavaScript를 켜 주세요.</noscript>
     </section>
+    <p class="small"><a href="./guide.html#privacy">개인정보 및 광고 안내</a></p>
   </main>
   <script>
     const pdfMode = new URLSearchParams(location.search).get('type') === 'pdf';
