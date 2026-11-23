@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="사진과 PDF의 용량을 줄이고 압축 전후 크기를 비교하세요.">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; connect-src https://cdn.jsdelivr.net; worker-src blob: https://cdn.jsdelivr.net; font-src blob: data:; img-src blob: data:; base-uri 'none'; form-action 'none'">
+  <title>사진 용량 줄이기</title>
+  <style>
+    :root { font-family: system-ui, "Malgun Gothic", sans-serif; color: #14243d; background: #f2f6ff; color-scheme: light; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; min-height: 76px; width: min(1100px, 100% - 36px); margin: auto; border-bottom: 1px solid #dce5f5; }
+    .brand { color: inherit; text-decoration: none; font-weight: 750; }
+    .privacy { color: #34517e; font-size: .875rem; padding: 5px 11px; border: 1px solid #cddbf3; border-radius: 999px; }
+    main { width: min(660px, 100% - 36px); margin: auto; padding: clamp(30px, 8vh, 82px) 0 44px; }
+    h1 { font-size: clamp(2rem, 7vw, 3.25rem); letter-spacing: -.065em; line-height: 1.2; text-align: center; margin: 0 0 12px; }
+    .intro { color: #485c7d; text-align: center; margin: 0 0 22px; }
+    nav { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 0 0 25px; }
+    nav a { padding: 9px 12px; border-radius: 8px; color: #254fcb; font-size: .9rem; text-decoration: none; font-weight: 700; }
+    nav a:hover, nav a[aria-current] { background: #e2ebff; }
+    .card { background: #fff; border: 1px solid #d9e4f9; border-radius: 24px; padding: clamp(16px, 4vw, 24px); box-shadow: 0 14px 36px #34527e12; }
+    .drop { text-align: center; background: #f8faff; border: 2px dashed #a4b9e9; border-radius: 14px; padding: 22px 12px; }
+    .drop.active { background: #e4edff; border-color: #2450ca; }
+    .drop p { margin: 0 0 11px; overflow-wrap: anywhere; }
+    .small { color: #485c7d; font-size: .875rem; line-height: 1.55; margin: 7px 0 0; }
+    label { display: block; font-weight: 700; margin: 18px 0 7px; }
+    select { width: 100%; min-height: 44px; border: 1px solid #a4b9e9; border-radius: 9px; padding: 6px 10px; color: #14243d; background: white; font: inherit; }
+    button, .download { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; border-radius: 9px; border: 1px solid #254fcb; color: white; background: #254fcb; padding: 0 15px; font: 700 .95rem system-ui; cursor: pointer; text-decoration: none; }
+    button:hover, .download:hover { background: #1941b8; }
+    #pick { color: #254fcb; background: white; }
+    #start { width: 100%; margin-top: 20px; }
+    button:disabled { border-color: #a1b0cc; background: #e8edf6; color: #4d5e7a; cursor: default; }
+    a:focus-visible, button:focus-visible, select:focus-visible { outline: 3px solid #254fcb; outline-offset: 3px; }
+    .result { margin-top: 15px; padding: 12px 14px; border: 1px solid #d3e2f8; border-radius: 11px; background: #f5f9ff; }
+    .result[data-error="true"] { background: #fff5f5; border-color: #f2c7cb; color: #84272d; }
+    .status { margin: 0; font-weight: 700; }
+    .download { margin-top: 11px; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="./">파일 도구</a>
+    <span class="privacy">서버 업로드 없음</span>
+  </header>
+  <main>
+    <h1 id="title">사진 용량 줄이기</h1>
+    <p class="intro">파일을 압축하고 줄어든 용량을 확인하세요.</p>
+    <nav aria-label="파일 도구">
+      <a href="./">한글 PDF 변환</a>
+      <a href="./compress.html" id="image-tab" aria-current="page">사진 용량 줄이기</a>
+      <a href="./compress.html?type=pdf" id="pdf-tab">PDF 용량 줄이기</a>
+      <a href="./guide.html">사용 안내</a>
+    </nav>
+    <section class="card" aria-label="파일 압축">
+      <div class="drop" id="drop">
+        <p id="filename">파일을 여기에 놓으세요</p>
+        <button id="pick" type="button" aria-describedby="formats">파일 선택</button>
+        <div class="small" id="formats"></div>
+        <input id="file" type="file" hidden>
+      </div>
+      <label for="level" id="level-label">압축 설정</label>
+      <select id="level" aria-describedby="hint"></select>
+      <p class="small" id="hint"></p>
+      <button id="start" type="button" disabled>용량 줄이기</button>
+      <div class="result" id="result" hidden>
+        <div role="status" aria-live="polite" aria-atomic="true">
+          <p class="status" id="status"></p>
+          <p class="small" id="detail"></p>
+        </div>
+        <a class="download" id="download" hidden>압축 파일 다운로드</a>
+      </div>
+      <noscript>파일을 압축하려면 브라우저에서 JavaScript를 켜 주세요.</noscript>
+    </section>
+  </main>
+  <script>
+    const pdfMode = new URLSearchParams(location.search).get('type') === 'pdf';
+    const el = (id) => document.getElementById(id);
+    const [file, pick, drop, filename, level, hint, start, result, status, detail, download] =
+      ['file', 'pick', 'drop', 'filename', 'level', 'hint', 'start', 'result', 'status', 'detail', 'download'].map(el);
+    const pdfBase = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.624/';
+    const pdfLibUrl = 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js';
+    const imageLevels = {
+      high: { label: '고화질 · 긴 변 2560px', edge: 2560, quality: .86 },
+      balanced: { label: '보통 · 긴 변 1920px', edge: 1920, quality: .78 },
+      small: { label: '작은 용량 · 긴 변 1280px', edge: 1280, quality: .65 }
+    };
+    const pdfLevels = {
+      lossless: { label: '문서 유지 · 글자 검색과 선택 유지', hint: 'PDF 내부 구조를 압축합니다. 이미 최적화된 파일은 용량이 거의 줄지 않을 수 있어요.' },
+      balanced: { label: '스캔 문서 · 120 dpi', dpi: 120, quality: .78, hint: '각 페이지를 이미지로 저장합니다. 글자 검색·선택, 링크, 양식 입력 기능은 사라집니다.' },
+      small: { label: '스캔 문서 · 90 dpi', dpi: 90, quality: .62, hint: '각 페이지를 더 작은 이미지로 저장합니다. 작은 글씨가 흐릿해질 수 있고 글자 검색·선택, 링크, 양식 입력 기능은 사라집니다.' }
+    };
+    const levels = pdfMode ? pdfLevels : imageLevels;
+    const maxSize = pdfMode ? 100_000_000 : 50_000_000;
+    let source, outputUrl, busy = false, pdfLibLoading;
+
+    if (pdfMode) {
+      document.title = el('title').textContent = 'PDF 용량 줄이기';
+      el('image-tab').removeAttribute('aria-current');
+      el('pdf-tab').setAttribute('aria-current', 'page');
+    }
+    file.accept = pdfMode ? '.pdf,application/pdf' : '.jpg,.jpeg,.png,.webp';
+    el('formats').textContent = pdfMode ? 'PDF · 최대 100 MB' : 'JPG · PNG · WebP · 최대 50 MB';
+    for (const [value, options] of Object.entries(levels)) level.add(new Option(options.label, value));
+    level.value = pdfMode ? 'lossless' : 'balanced';
+    function updateHint() {
+      hint.textContent = pdfMode ? levels[level.value].hint : '사진을 JPG로 저장합니다. 투명한 부분은 흰색으로 바뀝니다.';
+    }
+    updateHint();
+
+    function formatBytes(bytes) {
+      const formatter = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 1 });
+      if (bytes >= 1_000_000) return formatter.format(bytes / 1_000_000) + ' MB';
+      if (bytes >= 1_000) return formatter.format(bytes / 1_000) + ' KB';
+      return bytes + ' B';
+    }
+    function clearResult() {
+      if (outputUrl) URL.revokeObjectURL(outputUrl);
+      outputUrl = undefined;
+      download.removeAttribute('href');
+      download.hidden = true;
+      result.hidden = true;
+    }
+    function show(message, description = '', error = false) {
+      result.hidden = false;
+      result.dataset.error = String(error);
+      status.textContent = message;
+      detail.textContent = description;
+      detail.hidden = !description;
+    }
+    function selectFile(files) {
+      if (busy || !files.length) return;
+      clearResult();
+      source = undefined;
+      start.disabled = true;
+      filename.textContent = '파일을 여기에 놓으세요';
+      const selected = files[0];
+      const extension = pdfMode ? /\.pdf$/i : /\.(jpe?g|png|webp)$/i;
+      if (files.length !== 1 || !extension.test(selected.name) || !selected.size || selected.size > maxSize) {
+        show('파일을 확인해 주세요', el('formats').textContent + ' · 한 번에 한 파일', true);
+        return;
+      }
+      source = selected;
+      filename.textContent = source.name + ' · ' + formatBytes(source.size);
+      start.disabled = false;
+    }
+    function encodeJpeg(canvas, quality) {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('JPEG encoding failed')), 'image/jpeg', quality);
+      });
+    }
+    async function compressImage(selected, options) {
+      const image = await createImageBitmap(selected);
+      const canvas = document.createElement('canvas');
+      try {
+        const scale = Math.min(1, options.edge / Math.max(image.width, image.height));
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        const context = canvas.getContext('2d', { alpha: false });
+        context.fillStyle = '#fff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.imageSmoothingQuality = 'high';
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        return await encodeJpeg(canvas, options.quality);
+      } finally {
+        image.close();
+        canvas.width = canvas.height = 0;
+      }
+    }
+    function loadPdfLib() {
+      pdfLibLoading ??= new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = pdfLibUrl;
+        script.crossOrigin = 'anonymous';
+        const fail = () => {
+          clearTimeout(timer);
+          script.remove();
+          reject(new Error('PDF_TOOL'));
+        };
+        const timer = setTimeout(fail, 18000);
+        script.onerror = fail;
+        script.onload = () => {
+          if (!window.PDFLib?.PDFDocument) return fail();
+          clearTimeout(timer);
+          resolve(window.PDFLib.PDFDocument);
+        };
+        document.head.append(script);
+      }).catch(error => {
+        pdfLibLoading = undefined;
+        throw error;
+      });
+      return pdfLibLoading;
+    }
+    async function rasterPdf(bytes, PDFDocument, options) {
+      const pdfjs = await import(pdfBase + 'build/pdf.mjs').catch(() => { throw new Error('PDF_TOOL'); });
+      pdfjs.GlobalWorkerOptions.workerSrc = pdfBase + 'build/pdf.worker.mjs';
+      const task = pdfjs.getDocument({
+        data: new Uint8Array(bytes),
+        cMapUrl: pdfBase + 'cmaps/',
+        cMapPacked: true,
+        standardFontDataUrl: pdfBase + 'standard_fonts/',
+        wasmUrl: pdfBase + 'wasm/',
+        iccUrl: pdfBase + 'iccs/',
+        isEvalSupported: false
+      });
+      const canvas = document.createElement('canvas');
+      try {
+        const input = await task.promise;
+        const output = await PDFDocument.create();
+        for (let number = 1; number <= input.numPages; number++) {
+          show('PDF 압축 중…', number + ' / ' + input.numPages + '쪽');
+          const page = await input.getPage(number);
+          const original = page.getViewport({ scale: 1 });
+          const scale = Math.min(options.dpi / 72, 3000 / Math.max(original.width, original.height));
+          const viewport = page.getViewport({ scale });
+          canvas.width = Math.max(1, Math.ceil(viewport.width));
+          canvas.height = Math.max(1, Math.ceil(viewport.height));
+          const canvasContext = canvas.getContext('2d', { alpha: false });
+          await page.render({ canvasContext, viewport, background: '#fff' }).promise;
+          const jpeg = await encodeJpeg(canvas, options.quality);
+          const image = await output.embedJpg(await jpeg.arrayBuffer());
+          const target = output.addPage([original.width, original.height]);
+          target.drawImage(image, { x: 0, y: 0, width: original.width, height: original.height });
+          page.cleanup();
+        }
+        return await output.save();
+      } finally {
+        canvas.width = canvas.height = 0;
+        await task.destroy();
+      }
+    }
+    async function compressPdf(selected, options) {
+      const PDFDocument = await loadPdfLib();
+      const bytes = await selected.arrayBuffer();
+      if (options.dpi) return new Blob([await rasterPdf(bytes, PDFDocument, options)], { type: 'application/pdf' });
+      const pdf = await PDFDocument.load(bytes, { updateMetadata: false });
+      const compressed = await pdf.save({ useObjectStreams: true, updateFieldAppearances: false, addDefaultPage: false });
+      return new Blob([compressed], { type: 'application/pdf' });
+    }
+    async function run() {
+      if (busy || !source) return;
+      clearResult();
+      busy = true;
+      pick.disabled = start.disabled = level.disabled = true;
+      show(pdfMode ? 'PDF 압축 준비 중…' : '사진 압축 중…');
+      try {
+        const settings = levels[level.value];
+        const compressed = await (pdfMode ? compressPdf(source, settings) : compressImage(source, settings));
+        if (compressed.size >= source.size) {
+          show('용량이 줄어들지 않았어요', '원본 ' + formatBytes(source.size) + ' · 결과 ' + formatBytes(compressed.size) + '. 더 작은 압축 설정을 선택해 보세요.');
+          return;
+        }
+        const saved = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 1 }).format(100 * (source.size - compressed.size) / source.size);
+        outputUrl = URL.createObjectURL(compressed);
+        download.href = outputUrl;
+        download.download = source.name.replace(/\.[^.]+$/, '') + (pdfMode ? '-압축.pdf' : '-압축.jpg');
+        download.hidden = false;
+        show('압축 완료 · ' + saved + '% 감소', '원본 ' + formatBytes(source.size) + ' → 압축 후 ' + formatBytes(compressed.size));
+      } catch (error) {
+        const description = error.message === 'PDF_TOOL'
+          ? 'PDF 압축 도구를 불러오지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.'
+          : pdfMode ? 'PDF가 정상적으로 열리는지 확인해 주세요. 암호가 걸린 PDF는 지원하지 않아요.' : '이미지를 열지 못했어요. JPG, PNG 또는 WebP 파일인지 확인해 주세요.';
+        show('압축하지 못했어요', description, true);
+      } finally {
+        busy = false;
+        pick.disabled = start.disabled = level.disabled = false;
+      }
+    }
+    level.addEventListener('change', () => { updateHint(); clearResult(); });
+    pick.addEventListener('click', () => file.click());
+    file.addEventListener('change', () => { selectFile(file.files); file.value = ''; });
+    start.addEventListener('click', run);
+    window.addEventListener('dragover', event => {
+      if (event.dataTransfer.types.includes('Files')) event.preventDefault();
+    });
+    window.addEventListener('drop', event => {
+      if (event.dataTransfer.files.length) event.preventDefault();
+    });
+    drop.addEventListener('dragover', event => {
+      if (!event.dataTransfer.types.includes('Files')) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = busy ? 'none' : 'copy';
+      drop.classList.toggle('active', !busy);
+    });
+    drop.addEventListener('dragleave', event => {
+      if (!drop.contains(event.relatedTarget)) drop.classList.remove('active');
+    });
+    drop.addEventListener('drop', event => {
+      event.preventDefault();
+      drop.classList.remove('active');
+      selectFile(event.dataTransfer.files);
+    });
+  </script>
+</body>
+</html>
