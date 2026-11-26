@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="한글 HWP·HWPX를 브라우저에서 바로 PDF로 변환하고 다운로드하세요.">
   <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-K11YRxPYm+pCGFFV8Wam7cspDqXd4FvvobQSehIXb/s=' 'sha256-+6kVUGJjskSIEgqdar+d5fGmjOvEkQvGzCMWyxxBEwk=' 'strict-dynamic' 'unsafe-inline' 'wasm-unsafe-eval' https:; style-src 'unsafe-inline' https:; connect-src https:; worker-src blob: https://cdn.jsdelivr.net; font-src blob: data: https:; img-src blob: data: https:; frame-src https:; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-17dwJTpYNbRmoWM/3LP1848Hm44CtJuvLX2AFAsOnwk=' 'sha256-+6kVUGJjskSIEgqdar+d5fGmjOvEkQvGzCMWyxxBEwk=' 'strict-dynamic' 'unsafe-inline' 'wasm-unsafe-eval' https:; style-src 'unsafe-inline' https:; connect-src https:; worker-src blob: https://cdn.jsdelivr.net; font-src blob: data: https:; img-src blob: data: https:; frame-src https:; base-uri 'none'; form-action 'none'">
   <title>한글 PDF 변환</title>
   <style>
     :root { font-family: system-ui, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; color: #14243d; background: #f2f6ff; color-scheme: light; }
@@ -51,6 +51,19 @@
     [hidden] { display: none !important; }
     @media (max-width: 450px) { header, footer { width: calc(100% - 36px); } header { min-height: 62px; } .intro { font-size: .95rem; } }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+    .batch-options { display: grid; gap: 10px; margin-top: 14px; text-align: left; }
+    .batch-options label { display: flex; align-items: center; gap: 8px; font-weight: 650; }
+    .batch-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .batch-actions #start { width: auto; margin: 0; }
+    .batch-secondary { color: #254fcb; border-color: #a7bced; background: white; }
+    .batch-secondary:hover { background: #e8efff; }
+    .batch-selection { margin: 0; overflow-wrap: anywhere; color: #485c7d; }
+    .batch-rows { display: grid; gap: 10px; padding: 0; margin: 10px 0; list-style: none; }
+    .batch-rows li { display: grid; gap: 3px; border-top: 1px solid #d3e2f8; padding-top: 8px; overflow-wrap: anywhere; }
+    .batch-rows a, #zip-ready a { color: #1941b8; width: fit-content; }
+    .batch-error { color: #84272d; }
+    #zip-status { margin: 6px 0 0; }
+    #zip-ready { margin-top: 6px; }
   </style>
   <script>
   (() => {
@@ -70,7 +83,7 @@
   <main>
     <div class="art" aria-hidden="true"><span class="page">HWP</span><span class="dots"><i></i><i></i><i></i></span><span class="page pdf">PDF</span></div>
     <h1>한글 파일을 <span>바로 PDF로</span></h1>
-    <p class="intro">한글 파일을 선택하면 변환 후 PDF가 자동으로 다운로드돼요.</p>
+    <p class="intro">한글 파일 여러 개를 선택하면 파일마다 PDF로 변환됩니다.</p>
     <nav class="tools" aria-label="파일 도구">
       <a href="./" aria-current="page">한글 PDF 변환</a>
       <a href="./compress.html">사진 용량 줄이기</a>
@@ -80,13 +93,27 @@
     <section class="work" aria-label="파일 변환">
       <div class="zone" id="zone">
         <h2>파일을 여기에 놓으세요</h2>
-        <p class="formats" id="formats">.hwp · .hwpx · 한 번에 한 파일, 최대 50 MB</p>
+        <p class="formats" id="formats">.hwp · .hwpx · 파일당 50 MB · 최대 30개, 합계 250 MB</p>
         <button type="button" id="pick" aria-describedby="formats">한글 파일 선택</button>
-        <input type="file" id="file" accept=".hwp,.hwpx" hidden>
+        <input type="file" id="file" accept=".hwp,.hwpx" multiple hidden>
+      </div>
+      <div class="batch-options">
+        <label><input id="optimize" type="checkbox"> 변환 후 PDF 용량도 줄이기</label>
+        <p class="batch-selection" id="selection"></p>
+        <div class="batch-actions">
+          <button id="start" type="button" disabled>PDF로 변환</button>
+          <button class="batch-secondary" id="clear" type="button" hidden>선택 초기화</button>
+        </div>
       </div>
       <div class="result" id="result" hidden>
-        <div role="status" aria-live="polite" aria-atomic="true"><p id="status"></p><p id="detail"></p></div>
-        <a class="download" id="download" hidden>PDF 다시 다운로드</a>
+        <div role="status" aria-live="polite" aria-atomic="true">
+          <p class="status" id="status"></p>
+          <p class="small" id="detail"></p>
+        </div>
+        <ul class="batch-rows" id="rows" aria-label="파일별 처리 결과"></ul>
+        <button class="download" id="zip" type="button" hidden>전체 ZIP 다운로드</button>
+        <div id="zip-ready"></div>
+        <p class="small" id="zip-status" role="status"></p>
       </div>
     </section>
     <p class="note">문서는 브라우저 안에서만 처리됩니다.<br>글꼴이나 복잡한 서식은 원본과 다르게 표시될 수 있습니다. <a href="https://sanguneo.github.io/rhwptopdf/" rel="noreferrer" id="fallback" hidden>변환 엔진 데모 열기</a></p>
@@ -939,115 +966,319 @@ End of NOTICE.
     };
   </script>
   <script>
-    const el = (id) => document.getElementById(id);
-    const [zone, input, pick, result, status, detail, download] =
-      ['zone', 'file', 'pick', 'result', 'status', 'detail', 'download'].map(el);
-    let worker, pdfUrl, busy = false, timeout, activeFile;
+    const batchLimit = 30;
+    const batchBytes = 250_000_000;
+    const numberFormat = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 1 });
+    let pdfLibLoading;
 
-    function show(state, title, text = '') {
-      result.hidden = false;
-      result.dataset.state = state;
-      status.textContent = title;
-      detail.textContent = text;
-      detail.hidden = !text;
-      download.hidden = state !== 'done';
+    function formatBytes(bytes) {
+      if (bytes >= 1_000_000) return numberFormat.format(bytes / 1_000_000) + ' MB';
+      if (bytes >= 1_000) return numberFormat.format(bytes / 1_000) + ' KB';
+      return bytes + ' B';
     }
-    function finish() {
-      clearTimeout(timeout);
-      busy = false;
-      pick.disabled = false;
-      pick.textContent = '다른 한글 파일 선택';
-      activeFile = undefined;
-    }
-    function failure(message, resetWorker = false) {
-      if (resetWorker) {
-        worker?.terminate();
-        worker = undefined;
-      }
-      show('error', '변환할 수 없어요', message);
-      finish();
-    }
-    function getWorker() {
-      if (worker) return worker;
-      const url = URL.createObjectURL(new Blob([el('engine-source').textContent, '\n', el('worker-source').textContent], { type: 'text/javascript' }));
-      try {
-        worker = new Worker(url);
-      } finally {
-        URL.revokeObjectURL(url);
-      }
-      worker.addEventListener('error', () => {
-        el('fallback').hidden = false;
-        failure('변환 도구를 시작하지 못했어요. 페이지를 새로고침해 다시 시도해 주세요.', true);
+
+    function loadPdfLib() {
+      pdfLibLoading ??= new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js';
+        script.crossOrigin = 'anonymous';
+        const fail = () => {
+          clearTimeout(timer);
+          script.remove();
+          reject(new Error('PDF_TOOL'));
+        };
+        const timer = setTimeout(fail, 18000);
+        script.onerror = fail;
+        script.onload = () => {
+          if (!window.PDFLib?.PDFDocument) return fail();
+          clearTimeout(timer);
+          resolve(window.PDFLib.PDFDocument);
+        };
+        document.head.append(script);
+      }).catch(error => {
+        pdfLibLoading = undefined;
+        throw error;
       });
-      worker.addEventListener('message', ({ data }) => {
-        if (!busy) return;
-        if (data.type === 'converting') {
-          show('working', 'PDF로 변환 중…', activeFile.name);
-        } else if (data.type === 'error' || data.type === 'engine-error') {
-          el('fallback').hidden = data.type !== 'engine-error';
-          failure(data.message, data.type === 'engine-error');
-        } else if (data.type === 'done') {
-          const name = activeFile.name.replace(/\.(hwp|hwpx)$/i, '') + '.pdf';
-          pdfUrl = URL.createObjectURL(new Blob([data.bytes], { type: 'application/pdf' }));
-          download.href = pdfUrl;
-          download.download = name;
-          show('done', 'PDF 변환 완료', name + ' · ' + data.pageCount + '쪽');
-          finish();
-          download.click();
+      return pdfLibLoading;
+    }
+
+    async function optimizePdf(bytes, PDFDocument) {
+      const pdf = await PDFDocument.load(bytes, { updateMetadata: false });
+      return pdf.save({ useObjectStreams: true, updateFieldAppearances: false, addDefaultPage: false });
+    }
+
+    const crcTable = Uint32Array.from({ length: 256 }, (_, value) => {
+      for (let bit = 0; bit < 8; bit++) value = (value >>> 1) ^ (value & 1 ? 0xedb88320 : 0);
+      return value;
+    });
+
+    async function zipResults(entries) {
+      const parts = [], directory = [];
+      const encoder = new TextEncoder();
+      let offset = 0, directorySize = 0;
+      for (const { name, blob } of entries) {
+        const filename = encoder.encode(name);
+        let crc = 0xffffffff;
+        for await (const chunk of blob.stream()) {
+          for (const byte of chunk) crc = (crc >>> 8) ^ crcTable[(crc ^ byte) & 255];
+        }
+        crc = (crc ^ 0xffffffff) >>> 0;
+        const local = new DataView(new ArrayBuffer(30));
+        const central = new DataView(new ArrayBuffer(46));
+        local.setUint32(0, 0x04034b50, true);
+        central.setUint32(0, 0x02014b50, true);
+        central.setUint16(4, 20, true);
+        for (const [header, start] of [[local, 4], [central, 6]]) {
+          header.setUint16(start, 20, true);
+          header.setUint16(start + 2, 0x0800, true);
+          header.setUint16(start + 8, 33, true);
+          header.setUint32(start + 10, crc, true);
+          header.setUint32(start + 14, blob.size, true);
+          header.setUint32(start + 18, blob.size, true);
+          header.setUint16(start + 22, filename.length, true);
+        }
+        central.setUint32(42, offset, true);
+        offset += 30 + filename.length + blob.size;
+        directorySize += 46 + filename.length;
+        if (offset + directorySize + 22 >= 0xffffffff) throw new Error('ZIP_TOO_LARGE');
+        parts.push(local.buffer, filename, blob);
+        directory.push(central.buffer, filename);
+      }
+      const end = new DataView(new ArrayBuffer(22));
+      end.setUint32(0, 0x06054b50, true);
+      end.setUint16(8, entries.length, true);
+      end.setUint16(10, entries.length, true);
+      end.setUint32(12, directorySize, true);
+      end.setUint32(16, offset, true);
+      return new Blob([...parts, ...directory, end.buffer], { type: 'application/zip' });
+    }
+
+    function bindBatch({ area, controls, process, maxSize, extensions, archive, autoStart = false, autoDownload = false }) {
+      const get = id => document.getElementById(id);
+      const [input, picker, start, clear, selection, result, status, detail, rows, zip, zipStatus] =
+        ['file', 'pick', 'start', 'clear', 'selection', 'result', 'status', 'detail', 'rows', 'zip', 'zip-status'].map(get);
+      let files = [], busy = false, zipBusy = false, entries = [], urls = [];
+
+      function refresh() {
+        const locked = busy || zipBusy;
+        picker.disabled = clear.disabled = locked;
+        start.disabled = locked || !files.length;
+        clear.hidden = !files.length;
+        zip.disabled = locked;
+        controls.forEach(control => { control.disabled = locked; });
+        selection.textContent = files.length ? files.length + '개 선택 · ' + formatBytes(files.reduce((sum, file) => sum + file.size, 0)) : '선택한 파일이 없습니다.';
+      }
+      function resetResults() {
+        urls.forEach(url => URL.revokeObjectURL(url));
+        urls = [];
+        entries = [];
+        rows.replaceChildren();
+        get('zip-ready').replaceChildren();
+        detail.textContent = '';
+        zipStatus.textContent = '';
+        zip.hidden = true;
+        zip.textContent = '전체 ZIP 다운로드';
+        result.hidden = true;
+      }
+      function linkFor(blob, name, text) {
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        urls.push(url);
+        link.href = url;
+        link.download = name;
+        link.textContent = text;
+        return link;
+      }
+      function uniqueName(name) {
+        name = name.replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_');
+        const dot = name.lastIndexOf('.');
+        const base = dot > 0 ? name.slice(0, dot) : name;
+        const extension = dot > 0 ? name.slice(dot) : '';
+        let candidate = name, number = 2;
+        while (entries.some(entry => entry.name.toLowerCase() === candidate.toLowerCase())) {
+          candidate = base + ' (' + number++ + ')' + extension;
+        }
+        return candidate;
+      }
+      function addRow(file, message, output, error = false) {
+        const item = document.createElement('li');
+        const name = document.createElement('strong');
+        const info = document.createElement('span');
+        name.textContent = file.name;
+        info.textContent = message;
+        if (error) info.className = 'batch-error';
+        item.append(name, info);
+        let link;
+        if (output) {
+          const outputName = uniqueName(output.name);
+          entries.push({ name: outputName, blob: output.blob });
+          link = linkFor(output.blob, outputName, output.original ? '원본 다운로드' : '다운로드');
+          item.append(link);
+        }
+        rows.append(item);
+        return link;
+      }
+      async function run() {
+        if (busy || zipBusy || !files.length) return;
+        resetResults();
+        busy = true;
+        result.hidden = false;
+        refresh();
+        let completed = 0, failed = 0, original = 0, singleLink;
+        try {
+          for (const [index, file] of files.entries()) {
+            status.textContent = (index + 1) + ' / ' + files.length + ' 처리 중';
+            detail.textContent = file.name;
+            if (!extensions.test(file.name) || !file.size || file.size > maxSize) {
+              addRow(file, '지원 형식과 파일당 용량을 확인해 주세요.', null, true);
+              failed++;
+              continue;
+            }
+            try {
+              const output = await process(file, step => { detail.textContent = file.name + ' · ' + step; });
+              singleLink = addRow(file, output.message, output);
+              if (output.original) original++;
+              else completed++;
+            } catch (error) {
+              addRow(file, error.message || '파일을 처리하지 못했어요.', null, true);
+              failed++;
+            }
+          }
+          status.textContent = '완료 ' + completed + '개' + (original ? ' · 원본 유지 ' + original + '개' : '') + (failed ? ' · 실패 ' + failed + '개' : '');
+          detail.textContent = '';
+          zip.hidden = entries.length < 2;
+          if (autoDownload && files.length === 1 && singleLink) singleLink.click();
+        } finally {
+          busy = false;
+          refresh();
+        }
+      }
+      function select(list) {
+        if (busy || zipBusy || !list.length) return;
+        resetResults();
+        files = Array.from(list);
+        if (files.length > batchLimit || files.reduce((sum, file) => sum + file.size, 0) > batchBytes) {
+          files = [];
+          result.hidden = false;
+          status.textContent = '한 번에 최대 30개, 합계 250 MB까지 선택할 수 있어요.';
+        }
+        refresh();
+        if (autoStart) void run();
+      }
+
+      picker.addEventListener('click', () => input.click());
+      input.addEventListener('change', () => { select(input.files); input.value = ''; });
+      start.addEventListener('click', run);
+      controls.forEach(control => control.addEventListener('change', resetResults));
+      clear.addEventListener('click', () => { files = []; resetResults(); refresh(); });
+      zip.addEventListener('click', async () => {
+        if (busy || zipBusy || entries.length < 2) return;
+        zipBusy = true;
+        refresh();
+        zipStatus.textContent = 'ZIP 만드는 중…';
+        try {
+          const link = linkFor(await zipResults(entries), archive, 'ZIP 다운로드');
+          get('zip-ready').replaceChildren(link);
+          zipStatus.textContent = '';
+          link.click();
+          zip.hidden = true;
+        } catch {
+          zipStatus.textContent = 'ZIP을 만들지 못했어요. 파일별 다운로드를 이용해 주세요.';
+        } finally {
+          zipBusy = false;
+          refresh();
         }
       });
-      return worker;
+      window.addEventListener('dragover', event => {
+        if (event.dataTransfer.types.includes('Files')) event.preventDefault();
+      });
+      window.addEventListener('drop', event => {
+        if (event.dataTransfer.files.length) event.preventDefault();
+      });
+      area.addEventListener('dragover', event => {
+        if (!event.dataTransfer.types.includes('Files')) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = busy || zipBusy ? 'none' : 'copy';
+        area.classList.toggle('active', !busy && !zipBusy);
+      });
+      area.addEventListener('dragleave', event => {
+        if (!area.contains(event.relatedTarget)) area.classList.remove('active');
+      });
+      area.addEventListener('drop', event => {
+        event.preventDefault();
+        area.classList.remove('active');
+        select(event.dataTransfer.files);
+      });
+      refresh();
     }
-    async function convert(files) {
-      if (busy || !files.length) return;
-      if (pdfUrl) {
-        URL.revokeObjectURL(pdfUrl);
-        pdfUrl = undefined;
-        download.removeAttribute('href');
+
+    const el = id => document.getElementById(id);
+    const optimize = el('optimize');
+    let worker;
+
+    function convertPdf(bytes, progress) {
+      if (!worker) {
+        const url = URL.createObjectURL(new Blob([el('engine-source').textContent, '\n', el('worker-source').textContent], { type: 'text/javascript' }));
+        try {
+          worker = new Worker(url);
+        } finally {
+          URL.revokeObjectURL(url);
+        }
       }
-      if (files.length > 1) return show('error', '한 파일씩 변환할 수 있어요', '변환할 한글 파일 하나를 선택해 주세요.');
-      const [file] = files;
-      if (!/\.(hwp|hwpx)$/i.test(file.name)) return show('error', '한글 파일을 선택해 주세요', '.hwp 또는 .hwpx 파일을 열 수 있어요.');
-      if (!file.size || file.size > 50_000_000) return show('error', '파일 크기를 확인해 주세요', '비어 있지 않은 50 MB 이하 파일을 선택해 주세요.');
-      activeFile = file;
-      el('fallback').hidden = true;
-      busy = true;
-      pick.disabled = true;
-      pick.textContent = '변환 중…';
-      show('working', '변환 준비 중…', file.name);
-      try {
-        const bytes = await file.arrayBuffer();
-        const job = getWorker();
-        timeout = setTimeout(() => failure('처리 시간이 길어 파일을 변환하지 못했어요. 파일을 다시 선택해 주세요.', true), 120000);
-        job.postMessage(bytes, [bytes]);
-      } catch {
-        failure('파일을 읽거나 변환 도구를 시작하지 못했어요. 파일을 다시 선택해 주세요.');
-      }
+      return new Promise((resolve, reject) => {
+        const job = worker;
+        function finish(error, data, reset = false) {
+          clearTimeout(timer);
+          job.onmessage = job.onerror = job.onmessageerror = null;
+          if (reset) {
+            job.terminate();
+            worker = undefined;
+          }
+          if (error) reject(new Error(error));
+          else resolve(data);
+        }
+        const timer = setTimeout(() => finish('처리 시간이 너무 길어 이 파일을 건너뛰었어요.', null, true), 120000);
+        job.onerror = job.onmessageerror = () => finish('변환 도구를 시작하지 못했어요.', null, true);
+        job.onmessage = ({ data }) => {
+          if (data.type === 'converting') progress('PDF로 변환 중');
+          else if (data.type === 'done') finish(null, data);
+          else if (data.type === 'error' || data.type === 'engine-error') {
+            if (data.type === 'engine-error') el('fallback').hidden = false;
+            finish(data.message, null, data.type === 'engine-error');
+          }
+        };
+        try {
+          job.postMessage(bytes, [bytes]);
+        } catch {
+          finish('파일을 변환 도구에 전달하지 못했어요.', null, true);
+        }
+      });
     }
-    pick.addEventListener('click', () => input.click());
-    input.addEventListener('change', () => {
-      void convert([...input.files]);
-      input.value = '';
-    });
-    window.addEventListener('dragover', (event) => {
-      if (event.dataTransfer.types.includes('Files')) event.preventDefault();
-    });
-    window.addEventListener('drop', (event) => {
-      if (event.dataTransfer.files.length) event.preventDefault();
-    });
-    zone.addEventListener('dragover', (event) => {
-      if (!event.dataTransfer.types.includes('Files')) return;
-      event.preventDefault();
-      event.dataTransfer.dropEffect = busy ? 'none' : 'copy';
-      zone.classList.toggle('active', !busy);
-    });
-    zone.addEventListener('dragleave', (event) => {
-      if (!zone.contains(event.relatedTarget)) zone.classList.remove('active');
-    });
-    zone.addEventListener('drop', (event) => {
-      event.preventDefault();
-      zone.classList.remove('active');
-      void convert([...event.dataTransfer.files]);
+
+    bindBatch({
+      area: el('zone'), controls: [optimize], maxSize: 50_000_000,
+      extensions: /\.(hwp|hwpx)$/i, archive: '변환한-PDF.zip', autoStart: true, autoDownload: true,
+      async process(file, progress) {
+        const { bytes, pageCount } = await convertPdf(await file.arrayBuffer(), progress);
+        const name = file.name.replace(/\.(hwp|hwpx)$/i, '') + '.pdf';
+        let blob = new Blob([bytes], { type: 'application/pdf' });
+        let message = pageCount + '쪽 · ' + formatBytes(blob.size);
+        if (optimize.checked) {
+          progress('변환한 PDF 압축 중');
+          try {
+            const smaller = await optimizePdf(bytes, await loadPdfLib());
+            if (smaller.byteLength < blob.size) {
+              message = pageCount + '쪽 · ' + formatBytes(blob.size) + ' → ' + formatBytes(smaller.byteLength);
+              blob = new Blob([smaller], { type: 'application/pdf' });
+            } else {
+              message += ' · 추가로 줄일 수 있는 용량 없음';
+            }
+          } catch {
+            message += ' · 추가 압축 실패, 변환한 PDF 저장 가능';
+          }
+        }
+        return { name, blob, message };
+      }
     });
   </script>
 </body>
