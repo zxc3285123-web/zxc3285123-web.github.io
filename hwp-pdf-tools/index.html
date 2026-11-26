@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="한글 HWP·HWPX를 브라우저에서 바로 PDF로 변환하고 다운로드하세요.">
   <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-17dwJTpYNbRmoWM/3LP1848Hm44CtJuvLX2AFAsOnwk=' 'sha256-+6kVUGJjskSIEgqdar+d5fGmjOvEkQvGzCMWyxxBEwk=' 'strict-dynamic' 'unsafe-inline' 'wasm-unsafe-eval' https:; style-src 'unsafe-inline' https:; connect-src https:; worker-src blob: https://cdn.jsdelivr.net; font-src blob: data: https:; img-src blob: data: https:; frame-src https:; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-mVYcb08drRRpdBpo6DWHTNSzKro80XduMey0Or3ezpo=' 'sha256-+6kVUGJjskSIEgqdar+d5fGmjOvEkQvGzCMWyxxBEwk=' 'strict-dynamic' 'unsafe-inline' 'wasm-unsafe-eval' https:; style-src 'unsafe-inline' https:; connect-src https:; worker-src blob: https://cdn.jsdelivr.net; font-src blob: data: https:; img-src blob: data: https:; frame-src https:; base-uri 'none'; form-action 'none'">
   <title>한글 PDF 변환</title>
   <style>
     :root { font-family: system-ui, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; color: #14243d; background: #f2f6ff; color-scheme: light; }
@@ -61,6 +61,9 @@
     .batch-rows { display: grid; gap: 10px; padding: 0; margin: 10px 0; list-style: none; }
     .batch-rows li { display: grid; gap: 3px; border-top: 1px solid #d3e2f8; padding-top: 8px; overflow-wrap: anywhere; }
     .batch-rows a, #zip-ready a { color: #1941b8; width: fit-content; }
+    .batch-file-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .batch-file-actions button { min-height: 36px; padding: 0 10px; font-size: .875rem; }
+    #save-hint { margin: 8px 0; color: #485c7d; font-size: .875rem; }
     .batch-error { color: #84272d; }
     #zip-status { margin: 6px 0 0; }
     #zip-ready { margin-top: 6px; }
@@ -99,6 +102,7 @@
       </div>
       <div class="batch-options">
         <label><input id="optimize" type="checkbox"> 변환 후 PDF 용량도 줄이기</label>
+        <label><input id="choose-location" type="checkbox"> 자동 다운로드 대신 저장 위치 직접 선택</label>
         <p class="batch-selection" id="selection"></p>
         <div class="batch-actions">
           <button id="start" type="button" disabled>PDF로 변환</button>
@@ -111,7 +115,13 @@
           <p class="small" id="detail"></p>
         </div>
         <ul class="batch-rows" id="rows" aria-label="파일별 처리 결과"></ul>
-        <button class="download" id="zip" type="button" hidden>전체 ZIP 다운로드</button>
+        <div class="batch-actions">
+          <button class="download" id="zip" type="button" hidden>전체 ZIP 다운로드</button>
+          <button class="download" id="zip-location" type="button" hidden>ZIP 저장 위치 선택</button>
+          <button class="download" id="pdf-download" type="button" hidden>PDF 각각 다운로드</button>
+          <button class="download" id="pdf-folder" type="button" hidden>폴더 선택 후 PDF 모두 저장</button>
+        </div>
+        <p class="small" id="save-hint" hidden></p>
         <div id="zip-ready"></div>
         <p class="small" id="zip-status" role="status"></p>
       </div>
@@ -1053,18 +1063,50 @@ End of NOTICE.
       return new Blob([...parts, ...directory, end.buffer], { type: 'application/zip' });
     }
 
-    function bindBatch({ area, controls, process, maxSize, extensions, archive, autoStart = false, autoDownload = false }) {
+    async function writeDownload(handle, blob) {
+      const writable = await handle.createWritable();
+      try {
+        await writable.write(blob);
+        await writable.close();
+      } catch (error) {
+        await writable.abort().catch(() => {});
+        throw error;
+      }
+    }
+
+    async function newFileIn(folder, name) {
+      const dot = name.lastIndexOf('.');
+      const stem = dot > 0 ? name.slice(0, dot) : name;
+      const extension = dot > 0 ? name.slice(dot) : '';
+      let candidate = name;
+      for (let suffix = 2; ; suffix++) {
+        try {
+          await folder.getFileHandle(candidate);
+        } catch (error) {
+          if (error.name === 'NotFoundError') return folder.getFileHandle(candidate, { create: true });
+          if (error.name !== 'TypeMismatchError') throw error;
+        }
+        candidate = stem + ' (' + suffix + ')' + extension;
+      }
+    }
+
+    function bindBatch({ area, controls, process, maxSize, extensions, archive, directPdf = false, autoStart = false, autoDownload = () => false }) {
       const get = id => document.getElementById(id);
       const [input, picker, start, clear, selection, result, status, detail, rows, zip, zipStatus] =
         ['file', 'pick', 'start', 'clear', 'selection', 'result', 'status', 'detail', 'rows', 'zip', 'zip-status'].map(get);
-      let files = [], busy = false, zipBusy = false, entries = [], urls = [];
+      const [zipLocation, pdfDownload, pdfFolder, saveHint] =
+        ['zip-location', 'pdf-download', 'pdf-folder', 'save-hint'].map(get);
+      const canChooseFile = typeof window.showSaveFilePicker === 'function';
+      const canChooseFolder = typeof window.showDirectoryPicker === 'function';
+      let files = [], busy = false, zipBusy = false, entries = [], urls = [], archiveBlob;
+      let saveButtons = [];
 
       function refresh() {
         const locked = busy || zipBusy;
         picker.disabled = clear.disabled = locked;
         start.disabled = locked || !files.length;
         clear.hidden = !files.length;
-        zip.disabled = locked;
+        for (const button of [zip, zipLocation, pdfDownload, pdfFolder, ...saveButtons]) button.disabled = locked;
         controls.forEach(control => { control.disabled = locked; });
         selection.textContent = files.length ? files.length + '개 선택 · ' + formatBytes(files.reduce((sum, file) => sum + file.size, 0)) : '선택한 파일이 없습니다.';
       }
@@ -1072,6 +1114,9 @@ End of NOTICE.
         urls.forEach(url => URL.revokeObjectURL(url));
         urls = [];
         entries = [];
+        saveButtons = [];
+        archiveBlob = undefined;
+        zipLocation.hidden = pdfDownload.hidden = pdfFolder.hidden = saveHint.hidden = true;
         rows.replaceChildren();
         get('zip-ready').replaceChildren();
         detail.textContent = '';
@@ -1088,6 +1133,52 @@ End of NOTICE.
         link.download = name;
         link.textContent = text;
         return link;
+      }
+      async function saveOne(name, getBlob) {
+        if (busy || zipBusy) return;
+        zipBusy = true;
+        refresh();
+        zipStatus.textContent = '';
+        try {
+          const handle = await window.showSaveFilePicker({ suggestedName: name, id: 'file-tool-save' });
+          zipStatus.textContent = '파일을 저장하는 중…';
+          await writeDownload(handle, await getBlob());
+          zipStatus.textContent = handle.name + ' 저장 완료';
+        } catch (error) {
+          if (error.name !== 'AbortError') zipStatus.textContent = '선택한 위치에 저장하지 못했어요. 다른 폴더를 선택하거나 일반 다운로드를 이용해 주세요.';
+        } finally {
+          zipBusy = false;
+          refresh();
+        }
+      }
+      async function saveAllPdfs() {
+        if (busy || zipBusy || !directPdf || entries.length < 2) return;
+        zipBusy = true;
+        refresh();
+        let folder, saved = 0;
+        zipStatus.textContent = '';
+        try {
+          folder = await window.showDirectoryPicker({ mode: 'readwrite', id: 'file-tool-pdf-folder' });
+          for (const entry of entries) {
+            zipStatus.textContent = (saved + 1) + ' / ' + entries.length + ' PDF 저장 중…';
+            await writeDownload(await newFileIn(folder, entry.name), entry.blob);
+            saved++;
+          }
+          zipStatus.textContent = folder.name + ' 폴더에 PDF ' + saved + '개 저장 완료';
+        } catch (error) {
+          if (folder || error.name !== 'AbortError') {
+            zipStatus.textContent = 'PDF ' + saved + '개 저장 · 나머지는 파일별 다운로드를 이용해 주세요.';
+          }
+        } finally {
+          zipBusy = false;
+          refresh();
+        }
+      }
+      function getArchive() {
+        return archiveBlob ??= zipResults(entries).catch(error => {
+          archiveBlob = undefined;
+          throw error;
+        });
       }
       function uniqueName(name) {
         name = name.replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_');
@@ -1113,7 +1204,20 @@ End of NOTICE.
           const outputName = uniqueName(output.name);
           entries.push({ name: outputName, blob: output.blob });
           link = linkFor(output.blob, outputName, output.original ? '원본 다운로드' : '다운로드');
-          item.append(link);
+          const actions = document.createElement('div');
+          actions.className = 'batch-file-actions';
+          actions.append(link);
+          if (canChooseFile) {
+            const save = document.createElement('button');
+            save.type = 'button';
+            save.className = 'batch-secondary';
+            save.textContent = '저장 위치 선택';
+            save.setAttribute('aria-label', outputName + ' 저장 위치 선택');
+            save.addEventListener('click', () => saveOne(outputName, () => output.blob));
+            saveButtons.push(save);
+            actions.append(save);
+          }
+          item.append(actions);
         }
         rows.append(item);
         return link;
@@ -1146,8 +1250,16 @@ End of NOTICE.
           }
           status.textContent = '완료 ' + completed + '개' + (original ? ' · 원본 유지 ' + original + '개' : '') + (failed ? ' · 실패 ' + failed + '개' : '');
           detail.textContent = '';
-          zip.hidden = entries.length < 2;
-          if (autoDownload && files.length === 1 && singleLink) singleLink.click();
+          const multiple = entries.length > 1;
+          zip.hidden = !multiple;
+          zipLocation.hidden = !multiple || !canChooseFile;
+          pdfDownload.hidden = !multiple || !directPdf;
+          pdfFolder.hidden = !multiple || !directPdf || !canChooseFolder;
+          if (entries.length && !canChooseFile) {
+            saveHint.hidden = false;
+            saveHint.textContent = '다운로드 위치를 고르려면 브라우저 다운로드 설정에서 저장 위치 확인을 켜 주세요.';
+          }
+          if (files.length === 1 && singleLink && autoDownload()) singleLink.click();
         } finally {
           busy = false;
           refresh();
@@ -1171,13 +1283,20 @@ End of NOTICE.
       start.addEventListener('click', run);
       controls.forEach(control => control.addEventListener('change', resetResults));
       clear.addEventListener('click', () => { files = []; resetResults(); refresh(); });
+      zipLocation.addEventListener('click', () => saveOne(archive, getArchive));
+      pdfFolder.addEventListener('click', saveAllPdfs);
+      pdfDownload.addEventListener('click', () => {
+        if (busy || zipBusy || !directPdf) return;
+        for (const link of rows.querySelectorAll('a[download]')) link.click();
+        zipStatus.textContent = 'PDF 다운로드를 요청했어요. 브라우저에서 여러 파일 다운로드 허용을 묻는 경우 허용해 주세요.';
+      });
       zip.addEventListener('click', async () => {
         if (busy || zipBusy || entries.length < 2) return;
         zipBusy = true;
         refresh();
         zipStatus.textContent = 'ZIP 만드는 중…';
         try {
-          const link = linkFor(await zipResults(entries), archive, 'ZIP 다운로드');
+          const link = linkFor(await getArchive(), archive, 'ZIP 다운로드');
           get('zip-ready').replaceChildren(link);
           zipStatus.textContent = '';
           link.click();
@@ -1257,7 +1376,8 @@ End of NOTICE.
 
     bindBatch({
       area: el('zone'), controls: [optimize], maxSize: 50_000_000,
-      extensions: /\.(hwp|hwpx)$/i, archive: '변환한-PDF.zip', autoStart: true, autoDownload: true,
+      extensions: /\.(hwp|hwpx)$/i, archive: '변환한-PDF.zip', directPdf: true, autoStart: true,
+      autoDownload: () => !el('choose-location').checked,
       async process(file, progress) {
         const { bytes, pageCount } = await convertPdf(await file.arrayBuffer(), progress);
         const name = file.name.replace(/\.(hwp|hwpx)$/i, '') + '.pdf';
