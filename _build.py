@@ -150,7 +150,7 @@ def post_page(p):
     schema = json.dumps({
         "@context":"https://schema.org","@type":"Article",
         "headline":p["title"],"description":p["desc"],
-        "datePublished":p["date"],"dateModified":p["date"],
+        "datePublished":p["date"],"dateModified":p.get("updated", p["date"]),
         "author":{"@type":"Person","name":"[운영자명]"},
         "publisher":{"@type":"Organization","name":SITE_NAME}
     }, ensure_ascii=False)
@@ -162,7 +162,7 @@ def post_page(p):
 
 <main class="wrap">
   <article class="post">
-    <p class="meta"><span class="tag">{p["tag"]}</span> <span>최종 확인 {p["date"]}</span></p>
+    <p class="meta"><span class="tag">{p["tag"]}</span> <span>최종 확인 {p.get("updated", p["date"])}</span></p>
     {AD}
     {p["body"]}
     {AD}
@@ -186,7 +186,7 @@ cards = "".join(
     f'<a class="card" href="{os.path.basename(p["slug"])}">'
     f'<span class="tag" style="align-self:flex-start">{p["tag"]}</span>'
     f'<h3>{p["title"]}</h3><p>{p["desc"]}</p>'
-    f'<p class="meta">최종 확인 {p["date"]}</p></a>' for p in POSTS)
+    f'<p class="meta">최종 확인 {p.get("updated", p["date"])}</p></a>' for p in POSTS)
 page(path="guide/index.html", cur="guide/index.html", depth=1,
      title=f"규정 가이드 | {SITE_NAME}",
      desc="항공 수하물 규정을 주제별로 정리한 참고 문서. 보조배터리, 액체류 100ml, 반입 금지 물품, 항공사별 비교.",
